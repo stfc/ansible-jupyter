@@ -1,0 +1,4 @@
+---
+  - hosts: localhost   # Openstack is configured from this machine
+    roles: 
+      - k8s_cluster

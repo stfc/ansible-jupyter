@@ -1,0 +1,7 @@
+---
+  - name: Create a test instance
+    openstack.cloud.server:
+      state: present
+      name: ansible_test_deploy
+      image: Ubuntu-Bionic-NoGui
+      flavor: "m1.small"

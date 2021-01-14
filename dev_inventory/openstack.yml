@@ -1,0 +1,7 @@
+plugin: openstack.cloud.openstack  # Need full path else newer plugin falls over
+fail_on_errors: yes
+only_clouds: 
+  - jupyter-development
+
+compose:  # Allows us to dynamically select the cloud in the task
+  cloud_name_var: "jupyter-development"
