@@ -1,0 +1,10 @@
+---
+  # We need a unique identifier and since Coe template won't give us the unique name it creates
+  # make our unique name using the date
+  cluster_name: "jupyter-{{ ansible_date_time.date }}"
+  num_masters: 2
+  num_workers: 1
+
+  # Kubernetes specific
+  kubectl_port: 6443
+  
