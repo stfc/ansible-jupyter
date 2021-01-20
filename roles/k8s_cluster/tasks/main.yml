@@ -1,86 +1,86 @@
 ---
 
-  - name: Create Cluster Template
-    openstack.cloud.coe_cluster_template:
-      coe: kubernetes
-      name: "{{ cluster_name }}_template"
-      docker_volume_size: 5  # GB
-      external_network_id: External
-      floating_ip_enabled: false
-      image_id: "Fedora-Atomic-FINAL"
-      master_lb_enabled: yes
-      state: present
+- name: Create Cluster Template
+  openstack.cloud.coe_cluster_template:
+    coe: kubernetes
+    name: "{{ cluster_name }}_template"
+    docker_volume_size: "{{ docker_volume_size_gb }}"
+    external_network_id: External
+    floating_ip_enabled: false
+    image_id: "Fedora-Atomic-FINAL"
+    master_lb_enabled: yes
+    state: present
 
-  - name: Init k8s stack
-    openstack.cloud.coe_cluster:
-      name: "{{ cluster_name }}_k8s"
-      cluster_template_id: "{{ cluster_name }}_template"
-      keypair: "david_fair"
-      master_count : "{{ num_masters }}"
-      node_count: "{{ num_workers }}"
-      state: present
-        # For some unknown reason the openstack devs decided the best container agent
-      # was a dev tag which was then abandoned - this meant kubeconfig was not
-      # exported preventing our master node from deploying.
-      # https://storyboard.openstack.org/#!/story/2007591
-      labels:
-        heat_container_agent_tag: train-stable-3
-        use_podman: true  # Favour k8s.gcr.io over dockerhub for rate limit reasons
-        container_infra_prefix: https://mirror.gcr.io/
-    register: stack_result
+- name: Init k8s stack
+  openstack.cloud.coe_cluster:
+    name: "{{ cluster_name }}_k8s"
+    cluster_template_id: "{{ cluster_name }}_template"
+    keypair: "david_fair"
+    master_count : "{{ num_masters }}"
+    node_count: "{{ num_workers }}"
+    state: present
+      # For some unknown reason the openstack devs decided the best container agent
+    # was a dev tag which was then abandoned - this meant kubeconfig was not
+    # exported preventing our master node from deploying.
+    # https://storyboard.openstack.org/#!/story/2007591
+    labels:
+      heat_container_agent_tag: "{{ heat_container_agent }}"
+      # TODO wire up to use a specified mirror such as 
+      # container_infra_prefix: https://mirror.gcr.io/
+  register: stack_result
 
-  - name: Create LB for kubectl and SSH
-    openstack.cloud.loadbalancer:
-      name: "{{ cluster_name }}_master_in"
-      state: present
-      vip_network: Internal
-      listeners:
-        - name: "{{ cluster_name }}_kubectl"
+- name: Create LB for kubectl and SSH
+  openstack.cloud.loadbalancer:
+    name: "{{ cluster_name }}_master_in"
+    state: present
+    vip_network: Internal
+    listeners:
+      - name: "{{ cluster_name }}_kubectl"
+        protocol: TCP
+        protocol_port: "{{ kubectl_port }}"
+        pool:
+          name: "{{ cluster_name }}_kubectl"
           protocol: TCP
-          protocol_port: "{{ kubectl_port }}"
-          pool:
-            name: "{{ cluster_name }}_kubectl"
-            protocol: TCP
-        - name: "{{ cluster_name }}_ssh"
+      - name: "{{ cluster_name }}_ssh"
+        protocol: TCP
+        protocol_port: 22
+        pool:
+          name: "{{ cluster_name }}_ssh"
           protocol: TCP
-          protocol_port: 22
-          pool:
-            name: "{{ cluster_name }}_ssh"
-            protocol: TCP
-      wait: yes
-    register: kubectl_lb_result
+    wait: yes
+  register: kubectl_lb_result
 
-  - name: Wait for master nodes to come up...
-    openstack.cloud.server_info:
-      server: "*{{ cluster_name }}*-master*"
-      filters:
-        vm_state: active
-    register: master_instances_result
-    until: master_instances_result.openstack_servers | length == num_masters
-    retries: 60
-    delay: 30  # Try every 30 seconds for 1 hour
+- name: Wait for master nodes to come up...
+  openstack.cloud.server_info:
+    server: "*{{ cluster_name }}*-master*"
+    filters:
+      vm_state: active
+  register: master_instances_result
+  until: master_instances_result.openstack_servers | length == num_masters
+  retries: 60
+  delay: 30  # Try every 30 seconds for 1 hour
 
-  - name: Get subnet ID
-    openstack.cloud.subnets_info:
-      name: "*{{ cluster_name }}*"
-    register: subnet_result
+- name: Get subnet ID
+  openstack.cloud.subnets_info:
+    name: "*{{ cluster_name }}*"
+  register: subnet_result
 
-  - name: Assign master nodes to kubectl pools
-    openstack.cloud.lb_member:
-      protocol_port: "{{ kubectl_port }}"
-      pool: "{{ cluster_name }}_kubectl"
-      name:  "{{ item.name }}"  # Use the node name
-      address: "{{ item.addresses.private[0].addr }}"
-      subnet_id: "{{ subnet_result.openstack_subnets[0].id }}"
-      state: present
-    with_items: "{{ master_instances_result.openstack_servers }}"
+- name: Assign master nodes to kubectl pools
+  openstack.cloud.lb_member:
+    protocol_port: "{{ kubectl_port }}"
+    pool: "{{ cluster_name }}_kubectl"
+    name:  "{{ item.name }}"  # Use the node name
+    address: "{{ item.addresses.private[0].addr }}"
+    subnet_id: "{{ subnet_result.openstack_subnets[0].id }}"
+    state: present
+  with_items: "{{ master_instances_result.openstack_servers }}"
 
-  - name: Assign master nodes to ssh pools
-    openstack.cloud.lb_member:
-      protocol_port: 22
-      pool: "{{ cluster_name }}_ssh"
-      name:  "{{ item.name }}"  # Use the node name
-      address: "{{ item.addresses.private[0].addr }}"
-      subnet_id: "{{ subnet_result.openstack_subnets[0].id }}"
-      state: present
-    with_items: "{{ master_instances_result.openstack_servers }}"
+- name: Assign master nodes to ssh pools
+  openstack.cloud.lb_member:
+    protocol_port: 22
+    pool: "{{ cluster_name }}_ssh"
+    name:  "{{ item.name }}"  # Use the node name
+    address: "{{ item.addresses.private[0].addr }}"
+    subnet_id: "{{ subnet_result.openstack_subnets[0].id }}"
+    state: present
+  with_items: "{{ master_instances_result.openstack_servers }}"
