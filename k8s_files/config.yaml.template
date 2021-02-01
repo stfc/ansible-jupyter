@@ -1,0 +1,8 @@
+# Copy this file to config.yaml and fill in the various secrets below
+
+proxy:
+  secretToken: "<TO FILL>" # This can be generated with `openssl rand -hex 32`
+singleuser:
+  storage:
+    dynamic:
+      storageClass: <storageclass-name> # This needs to be a storage class you have created

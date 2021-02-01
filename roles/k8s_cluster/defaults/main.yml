@@ -4,8 +4,9 @@
 cluster_name: "jupyter-{{ ansible_date_time.date }}"
 num_masters: 2
 num_workers: 1
+max_worker_nodes: 10
 
-docker_volume_size_gb: 5
+docker_volume_size_gb: 10
 heat_container_agent: "train-stable-3"
 
 # Kubernetes specific

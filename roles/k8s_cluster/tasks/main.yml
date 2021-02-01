@@ -1,14 +1,14 @@
 ---
-
 - name: Create Cluster Template
   openstack.cloud.coe_cluster_template:
     coe: kubernetes
     name: "{{ cluster_name }}_template"
+    image_id: "Fedora-Atomic-FINAL"
     docker_volume_size: "{{ docker_volume_size_gb }}"
     external_network_id: External
     floating_ip_enabled: false
-    image_id: "Fedora-Atomic-FINAL"
     master_lb_enabled: yes
+    volume_driver: cinder
     state: present
 
 - name: Init k8s stack
@@ -16,17 +16,19 @@
     name: "{{ cluster_name }}_k8s"
     cluster_template_id: "{{ cluster_name }}_template"
     keypair: "david_fair"
-    master_count : "{{ num_masters }}"
+    master_count: "{{ num_masters }}"
     node_count: "{{ num_workers }}"
     state: present
-      # For some unknown reason the openstack devs decided the best container agent
-    # was a dev tag which was then abandoned - this meant kubeconfig was not
-    # exported preventing our master node from deploying.
-    # https://storyboard.openstack.org/#!/story/2007591
     labels:
+      auto_healing_enable: true
+      auto_scaling_enabled: true
+      max_node_count: "{{ max_worker_nodes }}"
+      ingress_controller: nginx
+      container_infra_prefix: harbor.davidsnet.work/magnum_mirror/
+      master_lb_floating_ip_enabled: true
+
+      flannel_tag: v0.13.0
       heat_container_agent_tag: "{{ heat_container_agent }}"
-      # TODO wire up to use a specified mirror such as 
-      # container_infra_prefix: https://mirror.gcr.io/
   register: stack_result
 
 - name: Create LB for kubectl and SSH
@@ -58,7 +60,7 @@
   register: master_instances_result
   until: master_instances_result.openstack_servers | length == num_masters
   retries: 60
-  delay: 30  # Try every 30 seconds for 1 hour
+  delay: 30 # Try every 30 seconds for 1 hour
 
 - name: Get subnet ID
   openstack.cloud.subnets_info:
@@ -69,7 +71,7 @@
   openstack.cloud.lb_member:
     protocol_port: "{{ kubectl_port }}"
     pool: "{{ cluster_name }}_kubectl"
-    name:  "{{ item.name }}"  # Use the node name
+    name: "{{ item.name }}" # Use the node name
     address: "{{ item.addresses.private[0].addr }}"
     subnet_id: "{{ subnet_result.openstack_subnets[0].id }}"
     state: present
@@ -79,7 +81,7 @@
   openstack.cloud.lb_member:
     protocol_port: 22
     pool: "{{ cluster_name }}_ssh"
-    name:  "{{ item.name }}"  # Use the node name
+    name: "{{ item.name }}" # Use the node name
     address: "{{ item.addresses.private[0].addr }}"
     subnet_id: "{{ subnet_result.openstack_subnets[0].id }}"
     state: present
