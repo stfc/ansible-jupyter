@@ -1,0 +1,7 @@
+jhub_deployed_name: jhub
+jhub_namespace: jhub
+jhub_version: "0.11.1"
+
+# The following shouldn't need changing
+jhub_config_file: "config.yaml"
+jhub_storage_file_config: "cinder-kube-storage.yaml"

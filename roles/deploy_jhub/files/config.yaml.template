@@ -1,0 +1,107 @@
+# Copy this file to config.yaml and fill in the various secrets below
+proxy:
+  https:
+    enabled: true
+    hosts:
+      - < domain name > # e.g. example.com
+    letsencrypt:
+      # This email gets warnings if auto-renewal fails
+      contactEmail: < email >
+  # This can be generated with `openssl rand -hex 32`
+  secretToken: "<TO FILL>"
+
+singleuser:
+  # Use new UI by default as the old UI is being deprecated
+  defaultUrl: "/lab"
+  storage:
+    type: dynamic
+    capacity: 1Gi # 1GB is the minimum Cinder will serve
+    dynamic:
+      storageClass: cinder-storage
+
+  profileList:
+    - display_name: "Default: Normal Size"
+      description: |
+        For small jobs and prototyping: 1 CPU, 1.5GB RAM and no GPU. This is the default.
+      default: True
+      kubespawner_override:
+        cpu_limit: 1
+        cpu_guarantee: 0.05 # Most will be idle
+        mem_limit: 1.5G
+        mem_guarantee: 1.5G
+        extra_resource_limits: {}
+    - display_name: "Large Memory Instance"
+      description: |
+        For larger jobs. 1 CPU, 3GB RAM and no GPU.
+      kubespawner_override:
+        cpu_limit: 1
+        cpu_guarantee: 0.05
+        mem_limit: "3G"
+        mem_guaranttee: "3G"
+        extra_resource_limits: {}
+    - display_name: "High CPU Instance"
+      description: |
+        For multi-processing jobs. 2 CPU, 3GB RAM and no GPU.
+      kubespawner_override:
+        cpu_limit: 2
+        cpu_guarantee: 0.05
+        mem_limit: "3G"
+        mem_guaranttee: "3G"
+        extra_resource_limits: {}
+    - display_name: "GPU Node"
+      description: |
+        (Provided for example, will not work as these instances do not have GPUs)
+        This configuration gives you 2 CPUs, 3GB of RAM, and a GPU
+      kubespawner_override:
+        image: consideratio/singleuser-gpu:v0.3.0
+        cpu_limit: 2
+        cpu_guarantee: 0.05
+        mem_limit: "3G"
+        mem_guarantee: "3G"
+        extra_resource_limits:
+          nvidia.com/gpu: "1"
+
+hub:
+  config:
+    Authenticator:
+      auto_login: true # Automatically redirect so they don't have to click a sign-in button
+      # This is the IAM username:
+      admin_users: ["MyIamAdminUsername", "AdminUsername2"]
+    GenericOAuthenticator:
+      login_service: "IRIS IAM" # Name for the shiny button, if autologin doesn't get us first
+
+      # The following are populated from https://iris-iam.stfc.ac.uk/manage/dev/dynreg
+      client_id: < TO FILL >
+      client_secret: < TO FILL >
+      # registration_token: - This isn't required but is a reminder, keep this safe or you won't be able to access/edit the IAM client
+      oauth_callback_url: https://<domain name>/hub/oauth_callback
+      authorize_url: https://iris-iam.stfc.ac.uk/authorize
+      token_url: https://iris-iam.stfc.ac.uk/token
+      userdata_url: https://iris-iam.stfc.ac.uk/userinfo
+      scope:
+        - openid
+        - preferred_username
+        - profile
+        - email
+      username_key: preferred_username
+    JupyterHub:
+      authenticator_class: generic-oauth
+
+scheduling:
+  # Try to pack users tightly rather than spinning up one node per user
+  userScheduler:
+    enabled: true
+  # Enable us to evict a placeholder rather than spin up a whole new node
+  podPriority:
+    enabled: true
+    defaultPriority: 0
+    userPlaceholderPriority: -10 # -10 is equal to scale up criteria for magnum
+  # Prep some environments beforehand so users don't have to wait
+  userPlaceholder:
+    enabled: true
+    replicas: 2 # Number of placeholders
+
+cull:
+  enabled: true
+  timeout: 120
+  every: 30

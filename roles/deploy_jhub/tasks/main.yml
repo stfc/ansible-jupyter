@@ -1,0 +1,30 @@
+- name: Test K8s service is contactable. If this fails check $KUBECONFIG is set.
+  community.kubernetes.k8s_cluster_info:
+
+- name: Enable PV Claims on Cinder
+  community.kubernetes.k8s:
+    state: present
+    src: "{{ role_path }}/files/{{ jhub_storage_file_config }}"
+
+- name: Create the working namespace
+  community.kubernetes.k8s:
+    name: "{{ jhub_namespace }}"
+    kind: Namespace
+    state: present
+
+- name: Install jhub helm repo
+  community.kubernetes.helm_repository:
+    name: jupyterhub
+    repo_url: https://jupyterhub.github.io/helm-chart/
+
+- name: Install pre-set version of Jhub
+  community.kubernetes.helm:
+    chart_ref: jupyterhub/jupyterhub
+    create_namespace: yes
+    update_repo_cache: yes
+    # Pulled from default
+    name: "{{ jhub_deployed_name }}"
+    chart_version: "{{ jhub_version }}"
+    release_namespace: "{{ jhub_namespace }}"
+    values_files:
+      - "{{ role_path }}/files/{{ jhub_config_file }}"

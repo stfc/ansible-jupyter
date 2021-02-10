@@ -3,7 +3,7 @@
   openstack.cloud.coe_cluster_template:
     coe: kubernetes
     name: "{{ cluster_name }}_template"
-    image_id: "Fedora-Atomic-FINAL"
+    image_id: "fedora-coreos-latest"
     docker_volume_size: "{{ docker_volume_size_gb }}"
     external_network_id: External
     floating_ip_enabled: false
@@ -15,20 +15,25 @@
   openstack.cloud.coe_cluster:
     name: "{{ cluster_name }}_k8s"
     cluster_template_id: "{{ cluster_name }}_template"
+    master_flavor_id: "{{ master_flavor }}"
+    flavor_id: "{{ worker_flavor }}"
     keypair: "david_fair"
     master_count: "{{ num_masters }}"
     node_count: "{{ num_workers }}"
     state: present
     labels:
+      admission_control_list: "{{ admission_plugins }}"
+      # does not play nice with our custom admission plugins, causing a heat creation error due to 'timeout' (likely pre-empted)
+      kube_dashboard_enabled: false
       auto_healing_enable: true
       auto_scaling_enabled: true
       max_node_count: "{{ max_worker_nodes }}"
-      ingress_controller: nginx
-      container_infra_prefix: harbor.davidsnet.work/magnum_mirror/
       master_lb_floating_ip_enabled: true
-
-      flannel_tag: v0.13.0
-      heat_container_agent_tag: "{{ heat_container_agent }}"
+      container_infra_prefix: harbor.davidsnet.work/magnum_mirror/
+      flannel_backend: host-gw
+      cluster_autoscaler: "{{ cluster_autoscaler_version }}"
+      kube_tag: "{{ kube_tag }}"
+      etcd_tag: "{{ etcd_tag }}"
   register: stack_result
 
 - name: Create LB for kubectl and SSH
@@ -67,12 +72,16 @@
     name: "*{{ cluster_name }}*"
   register: subnet_result
 
+- name: Print master result
+  debug:
+    msg: "{{ master_instances_result }}"
+
 - name: Assign master nodes to kubectl pools
   openstack.cloud.lb_member:
     protocol_port: "{{ kubectl_port }}"
     pool: "{{ cluster_name }}_kubectl"
     name: "{{ item.name }}" # Use the node name
-    address: "{{ item.addresses.private[0].addr }}"
+    address: "{{ item.addresses[cluster_name + '_k8s'][0].addr }}"
     subnet_id: "{{ subnet_result.openstack_subnets[0].id }}"
     state: present
   with_items: "{{ master_instances_result.openstack_servers }}"
@@ -82,7 +91,7 @@
     protocol_port: 22
     pool: "{{ cluster_name }}_ssh"
     name: "{{ item.name }}" # Use the node name
-    address: "{{ item.addresses.private[0].addr }}"
+    address: "{{ item.addresses[cluster_name + '_k8s'][0].addr }}"
     subnet_id: "{{ subnet_result.openstack_subnets[0].id }}"
     state: present
   with_items: "{{ master_instances_result.openstack_servers }}"

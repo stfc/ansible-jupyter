@@ -1,13 +1,23 @@
 ---
-# We need a unique identifier and since Coe template won't give us the unique name it creates
-# make our unique name using the date
-cluster_name: "jupyter-{{ ansible_date_time.date }}"
+# We need a unique identifier so use a service version number we should bump
+release_version: 0.1
+cluster_name: "jupyter-{{ release_version }}"
 num_masters: 2
 num_workers: 1
-max_worker_nodes: 10
+max_worker_nodes: 5
+
+master_flavor: "c3.small"
+worker_flavor: "c3.small"
 
 docker_volume_size_gb: 10
-heat_container_agent: "train-stable-3"
+# Magnum deploys 1.0 by default, we need 1.1+ to be pod priority aware
+cluster_autoscaler_version: "v1.16.5"
+kube_tag: "v1.16.13"
+# Because the official mirror (which we mirror from) uses vx.y.z instead of x.y.z that coreos uses
+etcd_tag: "v3.2.31"
 
+# We need to enable the priority plugin manually, the list of default plugins + 'Priority' is from:
+# https://opendev.org/openstack/magnum/src/branch/stable/ussuri/magnum/drivers/k8s_fedora_coreos_v1/templates/kubecluster.yaml
+admission_plugins: "NamespaceLifecycle,LimitRanger,ServiceAccount,DefaultStorageClass,DefaultTolerationSeconds,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,ResourceQuota,Priority"
 # Kubernetes specific
 kubectl_port: 6443
