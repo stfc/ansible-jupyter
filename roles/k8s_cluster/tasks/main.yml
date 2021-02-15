@@ -1,32 +1,38 @@
 ---
-
 - name: Create Cluster Template
   openstack.cloud.coe_cluster_template:
     coe: kubernetes
     name: "{{ cluster_name }}_template"
+    image_id: "fedora-coreos-latest"
     docker_volume_size: "{{ docker_volume_size_gb }}"
     external_network_id: External
     floating_ip_enabled: false
-    image_id: "Fedora-Atomic-FINAL"
     master_lb_enabled: yes
+    volume_driver: cinder
     state: present
 
 - name: Init k8s stack
   openstack.cloud.coe_cluster:
     name: "{{ cluster_name }}_k8s"
     cluster_template_id: "{{ cluster_name }}_template"
+    master_flavor_id: "{{ master_flavor }}"
+    flavor_id: "{{ worker_flavor }}"
     keypair: "david_fair"
-    master_count : "{{ num_masters }}"
+    master_count: "{{ num_masters }}"
     node_count: "{{ num_workers }}"
     state: present
-      # For some unknown reason the openstack devs decided the best container agent
-    # was a dev tag which was then abandoned - this meant kubeconfig was not
-    # exported preventing our master node from deploying.
-    # https://storyboard.openstack.org/#!/story/2007591
     labels:
-      heat_container_agent_tag: "{{ heat_container_agent }}"
-      # TODO wire up to use a specified mirror such as 
-      # container_infra_prefix: https://mirror.gcr.io/
+      admission_control_list: "{{ admission_plugins }}"
+      # does not play nice with our custom admission plugins, causing a heat creation error due to 'timeout' (likely pre-empted)
+      kube_dashboard_enabled: false
+      auto_healing_enable: true
+      auto_scaling_enabled: true
+      max_node_count: "{{ max_worker_nodes }}"
+      container_infra_prefix: "{{ mirror_url }}"
+      flannel_backend: host-gw
+      cluster_autoscaler: "{{ cluster_autoscaler_version }}"
+      kube_tag: "{{ kube_tag }}"
+      etcd_tag: "{{ etcd_tag }}"
   register: stack_result
 
 - name: Create LB for kubectl and SSH
@@ -58,19 +64,23 @@
   register: master_instances_result
   until: master_instances_result.openstack_servers | length == num_masters
   retries: 60
-  delay: 30  # Try every 30 seconds for 1 hour
+  delay: 30 # Try every 30 seconds for 1 hour
 
 - name: Get subnet ID
   openstack.cloud.subnets_info:
     name: "*{{ cluster_name }}*"
   register: subnet_result
 
+- name: Print master result
+  debug:
+    msg: "{{ master_instances_result }}"
+
 - name: Assign master nodes to kubectl pools
   openstack.cloud.lb_member:
     protocol_port: "{{ kubectl_port }}"
     pool: "{{ cluster_name }}_kubectl"
-    name:  "{{ item.name }}"  # Use the node name
-    address: "{{ item.addresses.private[0].addr }}"
+    name: "{{ item.name }}" # Use the node name
+    address: "{{ item.addresses[cluster_name + '_k8s'][0].addr }}"
     subnet_id: "{{ subnet_result.openstack_subnets[0].id }}"
     state: present
   with_items: "{{ master_instances_result.openstack_servers }}"
@@ -79,8 +89,8 @@
   openstack.cloud.lb_member:
     protocol_port: 22
     pool: "{{ cluster_name }}_ssh"
-    name:  "{{ item.name }}"  # Use the node name
-    address: "{{ item.addresses.private[0].addr }}"
+    name: "{{ item.name }}" # Use the node name
+    address: "{{ item.addresses[cluster_name + '_k8s'][0].addr }}"
     subnet_id: "{{ subnet_result.openstack_subnets[0].id }}"
     state: present
   with_items: "{{ master_instances_result.openstack_servers }}"

@@ -1,5 +1,7 @@
 *.retry
+
 # Prevent commit of clouds.yaml
-
-*\clouds.yaml
-
+*clouds.yaml
+*config.yaml
+*tls.yaml
+*pem
