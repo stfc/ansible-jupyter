@@ -28,7 +28,7 @@
       auto_healing_enable: true
       auto_scaling_enabled: true
       max_node_count: "{{ max_worker_nodes }}"
-      container_infra_prefix: harbor.davidsnet.work/magnum_mirror/
+      container_infra_prefix: "{{ mirror_url }}"
       flannel_backend: host-gw
       cluster_autoscaler: "{{ cluster_autoscaler_version }}"
       kube_tag: "{{ kube_tag }}"

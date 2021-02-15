@@ -9,6 +9,8 @@ max_worker_nodes: 5
 master_flavor: "c3.small"
 worker_flavor: "c3.small"
 
+mirror_url: harbor.davidsnet.work/magnum_mirror/
+
 docker_volume_size_gb: 10
 # Magnum deploys 1.0 by default, we need 1.1+ to be pod priority aware
 cluster_autoscaler_version: "v1.16.5"
