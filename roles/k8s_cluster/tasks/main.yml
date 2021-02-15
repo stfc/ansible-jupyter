@@ -28,7 +28,6 @@
       auto_healing_enable: true
       auto_scaling_enabled: true
       max_node_count: "{{ max_worker_nodes }}"
-      master_lb_floating_ip_enabled: true
       container_infra_prefix: harbor.davidsnet.work/magnum_mirror/
       flannel_backend: host-gw
       cluster_autoscaler: "{{ cluster_autoscaler_version }}"
