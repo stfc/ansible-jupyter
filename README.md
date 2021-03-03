@@ -37,6 +37,27 @@ Deploying a cluster
 - Check for kubectl connectivity `kubectl get nodes`
 - Check that all pods are created successfully with `kubectl get pods -n kube-system`
 
+Enabling GPU Workers
+--------------------
+- Edit `roles/build_gpu_driver/defaults/main.yml` to check the Nvidia driver and OS targetted
+- Run `ansible-playbook playbooks/build_gpu_driver.yml` to build and push the driver to the magnum mirror
+
+
+- In `roles/gpu_wokers/defaults/main.yml` check the configuration matches above and the desired outcome
+- If the cluster already exists comment out the init cluster step in `k8s_cluster/tasks_deploy_magnum_cluster`. Openstack will create a new cluster as this step is not idempotent.
+- Run `ansible-playbook playbooks/deploy_jhub.yml -i dev_inventory/openstack.yml`
+- In `kubectl get nodes` a new node will be deployed
+- The status of the Nvidia driver on the guest can be monitored with `kubectl get all -n gpu-operator-resources`
+
+
+Updating Autoscaler
+--------------------
+The cluster autoscaler must be informed how to scale these nodes:
+- Edit the deployment with `kubectl edit deploy/cluster-autoscaler -n kube-system`
+- Find the line with `1:n:default-worker` where n is the max number of workers
+- Insert another line below, taking care to have 3 dashes: `- --1:n:gpu-worker` where n is the max instances of GPU workers
+- Save, this should enable autoscaling on GPU instances
+
 Deploying Jupyter Hub
 =====================
 
