@@ -28,3 +28,30 @@
     release_namespace: "{{ jhub_namespace }}"
     values_files:
       - "{{ role_path }}/files/{{ jhub_config_file }}"
+
+- name: Create namespace for Nvidia components
+  community.kubernetes.k8s:
+    name: "{{ item }}"
+    kind: Namespace
+    state: present
+  with_items:
+    - gpu-operator
+    - gpu-operator-resources
+
+- name: Install Nvidia GPU Operator repo
+  community.kubernetes.helm_repository:
+    name: gpu-operator
+    repo_url: https://nvidia.github.io/gpu-operator
+
+- name: Install GPU Operator, pointing to own driver
+  community.kubernetes.helm:
+    chart_ref: nvidia/gpu-operator
+    update_repo_cache: yes
+    # Pulled from default
+    name: gpu-operator
+    release_namespace: gpu-operator
+    release_values:
+      driver:
+        repository: "harbor.stfc.ac.uk/magnum_mirror"
+        image: "nvidia_driver"
+        version: "{{ NVIDIA_DRIVER_VERSION }}"
