@@ -7,6 +7,8 @@ num_workers: 1
 max_worker_nodes: 5
 max_gpu_nodes: 0
 
+keypair_name: "david_fair"
+
 master_flavor: "c3.small"
 worker_flavor: "c3.medium"
 gpu_flavor: "g-p4000.x1"

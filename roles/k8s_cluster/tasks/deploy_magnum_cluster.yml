@@ -16,7 +16,7 @@
     cluster_template_id: "{{ cluster_name }}_template"
     master_flavor_id: "{{ master_flavor }}"
     flavor_id: "{{ worker_flavor }}"
-    keypair: "david_fair"
+    keypair: "{{ keypair_name }}"
     master_count: "{{ num_masters }}"
     node_count: "{{ num_workers }}"
     state: present
