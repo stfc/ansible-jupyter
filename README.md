@@ -7,9 +7,14 @@ and a JupyterHub Service. This uses the helm chart provided by [ZeroToJupyterHub
 Local Environment Setup
 =======================
 
-- Activate .venv if present then install pip deps: `pip3 install ansible openstacksdk openshift`
+- Install `python3-openstackclient` and `python3-magnumclient`
+- Upgrade pip3 as the default version is too old to handle the required deps: `pip3 install --upgrade`
+- Activate .venv if present then install pip deps: `pip3 install ansible setuptools setuptools-rust openstacksdk openshift`
+- Clone the repository and cd into it
 - Install requirements `ansible-galaxy collection install -r requirements.yml`
-- Obtain a copy of clouds.yaml for your project, place it in `~/.configs/openstack/clouds.yaml` and rename `openstack` to `jupyter-development`
+- Obtain a copy of clouds.yaml for your project, place it in `~/.config/openstack/clouds.yaml` you may need to create the parent directory
+- Open the file and rename `openstack` to `jupyter-development`. 
+- Insert your a password line below username with your password
 - Test using `openstack --os-cloud=jupyter-development coe cluster template list`, which will always return built-in templates
 
 Requirements

@@ -1,80 +1,88 @@
-# Copy this file to config.yaml and fill in the various secrets below
+# Copy this file to config.yaml and fill everything <TO_FILL>
 proxy:
   https:
     enabled: true
     hosts:
-      - < domain name > # e.g. example.com
+      - jupyter.stfc.ac.uk
     letsencrypt:
+      # Uncomment acmeserver for a test certificate
+      # acmeServer: "https://acme-staging-v02.api.letsencrypt.org/directory"
       # This email gets warnings if auto-renewal fails
-      contactEmail: < email >
+      contactEmail: <TO_FILL>
   # This can be generated with `openssl rand -hex 32`
-  secretToken: "<TO FILL>"
+  secretToken: <TO_FILL>
 
 singleuser:
   # Use new UI by default as the old UI is being deprecated
   defaultUrl: "/lab"
+
   storage:
+    # Required for PyTorch
+    extraVolumes:
+      - name: shm-volume
+        emptyDir:
+          medium: Memory
+    extraVolumeMounts:
+      - name: shm-volume
+        mountPath: /dev/shm
+
     type: dynamic
     capacity: 1Gi # 1GB is the minimum Cinder will serve
     dynamic:
       storageClass: cinder-storage
 
+  # Default profile, this is what the placeholders will use
+  cpu:
+    limit: 2
+    guarantee: 0.05
+  memory:
+    limit: 1.5G
+    guarantee: 1.5G
+
   profileList:
     - display_name: "Default: Normal Size"
       description: |
-        For small jobs and prototyping: 1 CPU, 1.5GB RAM and no GPU. This is the default.
+        For small jobs and prototyping: 2 CPUs, 1.5GB RAM and no GPU. This is the default.
       default: True
-      kubespawner_override:
-        cpu_limit: 1
-        cpu_guarantee: 0.05 # Most will be idle
-        mem_limit: 1.5G
-        mem_guarantee: 1.5G
-        extra_resource_limits: {}
     - display_name: "Large Memory Instance"
       description: |
-        For larger jobs. 1 CPU, 3GB RAM and no GPU.
+        For larger jobs. 8 CPUs, 7.5GB RAM and no GPU.
       kubespawner_override:
-        cpu_limit: 1
+        cpu_limit: 8
         cpu_guarantee: 0.05
-        mem_limit: "3G"
-        mem_guaranttee: "3G"
+        mem_limit: "7.5G"
+        mem_guaranttee: "7.5G"
         extra_resource_limits: {}
-    - display_name: "High CPU Instance"
+    - display_name: "Not Available - GPU Prototype"
       description: |
-        For multi-processing jobs. 2 CPU, 3GB RAM and no GPU.
-      kubespawner_override:
-        cpu_limit: 2
-        cpu_guarantee: 0.05
-        mem_limit: "3G"
-        mem_guaranttee: "3G"
-        extra_resource_limits: {}
-    - display_name: "GPU Node"
-      description: |
-        (Provided for example, will not work as these instances do not have GPUs)
         This configuration gives you 2 CPUs, 3GB of RAM, and a GPU
+      image: consideratio/singleuser-gpu:v0.3.0
       kubespawner_override:
-        image: consideratio/singleuser-gpu:v0.3.0
         cpu_limit: 2
         cpu_guarantee: 0.05
         mem_limit: "3G"
         mem_guarantee: "3G"
+        tolerations:
+          - key: nvidia.com/gpu
+            operator: Equal
+            value: "present"
+            effect: NoSchedule
         extra_resource_limits:
           nvidia.com/gpu: "1"
 
 hub:
   config:
     Authenticator:
-      auto_login: true # Automatically redirect so they don't have to click a sign-in button
-      # This is the IAM username:
-      admin_users: ["MyIamAdminUsername", "AdminUsername2"]
+      # Whilst auto-login would be nice it dumps users at IRIS IAM with no warning
+      # this gets users into the habit of blindly accepting sign-in without seeing the service
+      auto_login: false
     GenericOAuthenticator:
-      login_service: "IRIS IAM" # Name for the shiny button, if autologin doesn't get us first
-
-      # The following are populated from https://iris-iam.stfc.ac.uk/manage/dev/dynreg
-      client_id: < TO FILL >
-      client_secret: < TO FILL >
-      # registration_token: - This isn't required but is a reminder, keep this safe or you won't be able to access/edit the IAM client
-      oauth_callback_url: https://<domain name>/hub/oauth_callback
+      login_service: "IRIS IAM" # Name for the shiny button
+      client_id: <TO_FILL>
+      client_secret: <TO_FILL>
+      # Kept for reference but not a config item
+      # registration_token: <TO_FILL>
+      oauth_callback_url: https://jupyter.stfc.ac.uk/hub/oauth_callback
       authorize_url: https://iris-iam.stfc.ac.uk/authorize
       token_url: https://iris-iam.stfc.ac.uk/token
       userdata_url: https://iris-iam.stfc.ac.uk/userinfo
@@ -83,9 +91,60 @@ hub:
         - preferred_username
         - profile
         - email
+        - groups
       username_key: preferred_username
     JupyterHub:
-      authenticator_class: generic-oauth
+      # Waiting on https://github.com/jupyterhub/oauthenticator/pull/395/files
+      # to uncomment this
+      # authenticator_class: GroupAuth
+  extraConfig:
+    # Adapted from https://github.com/jupyterhub/oauthenticator/pull/395/files
+    # When it's merged this can and should be removed
+    custom_auth: |
+      from typing import List
+      from oauthenticator.generic import GenericOAuthenticator
+
+      class GroupAuth(GenericOAuthenticator):
+          allowed_groups: List[str] = [
+              "stfc-cloud"
+          ]
+
+          admin_groups: List[str] = [
+              "stfc-cloud"
+          ]
+
+          claim_groups_key = "groups"
+          @staticmethod
+          def check_user_in_groups(member_groups, allowed_groups):
+              return bool(set(member_groups) & set(allowed_groups))
+
+          async def authenticate(self, *args, **kwargs):
+              user_info = await super().authenticate(*args, **kwargs)
+              if self.allowed_groups:
+                  self.log.info('Validating if user claim groups match any of {}'.format(self.allowed_groups))
+                  user_data_resp_json = user_info["auth_state"]["oauth_user"]
+
+                  if callable(self.claim_groups_key):
+                      groups = self.claim_groups_key(user_data_resp_json)
+                  else:
+                      groups = user_data_resp_json.get(self.claim_groups_key)
+
+                  if not groups:
+                      self.log.error(
+                          "No claim groups found for user! Something wrong with the `claim_groups_key` {}? {}".format(
+                              self.claim_groups_key, user_data_resp_json
+                          )
+                      )
+                      groups = []
+
+                  if self.check_user_in_groups(groups, self.allowed_groups):
+                      user_info['admin'] = self.check_user_in_groups(groups, self.admin_groups)
+                  else:
+                      user_info = None
+
+              return user_info
+
+      c.JupyterHub.authenticator_class = GroupAuth
 
 scheduling:
   # Try to pack users tightly rather than spinning up one node per user
@@ -95,7 +154,7 @@ scheduling:
   podPriority:
     enabled: true
     defaultPriority: 0
-    userPlaceholderPriority: -10 # -10 is equal to scale up criteria for magnum
+    userPlaceholderPriority: -10 # -10 is equal to scale up criteria
   # Prep some environments beforehand so users don't have to wait
   userPlaceholder:
     enabled: true

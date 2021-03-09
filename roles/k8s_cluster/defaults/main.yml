@@ -1,6 +1,6 @@
 ---
 # We need a unique identifier so use a service version number we should bump
-release_version: "0-2" # Magnum will replace . with - breaking things
+release_version: "1-0" # Magnum will replace . with - breaking things
 cluster_name: "jupyter-{{ release_version }}"
 num_masters: 2
 num_workers: 1
@@ -8,7 +8,7 @@ max_worker_nodes: 5
 max_gpu_nodes: 0
 
 master_flavor: "c3.small"
-worker_flavor: "c3.small"
+worker_flavor: "c3.medium"
 gpu_flavor: "g-p4000.x1"
 
 mirror_url: harbor.stfc.ac.uk/magnum_mirror/
