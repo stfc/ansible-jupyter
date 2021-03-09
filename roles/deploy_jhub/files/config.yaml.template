@@ -33,7 +33,7 @@ singleuser:
 
   # Default profile, this is what the placeholders will use
   cpu:
-    limit: 1
+    limit: 2
     guarantee: 0.05
   memory:
     limit: 1.5G
@@ -42,18 +42,18 @@ singleuser:
   profileList:
     - display_name: "Default: Normal Size"
       description: |
-        For small jobs and prototyping: 1 CPU, 1.5GB RAM and no GPU. This is the default.
+        For small jobs and prototyping: 2 CPUs, 1.5GB RAM and no GPU. This is the default.
       default: True
     - display_name: "Large Memory Instance"
       description: |
-        For larger jobs. 1 CPU, 3GB RAM and no GPU.
+        For larger jobs. 8 CPUs, 7.5GB RAM and no GPU.
       kubespawner_override:
-        cpu_limit: 1
+        cpu_limit: 8
         cpu_guarantee: 0.05
-        mem_limit: "3G"
-        mem_guaranttee: "3G"
+        mem_limit: "7.5G"
+        mem_guaranttee: "7.5G"
         extra_resource_limits: {}
-    - display_name: "Unavailable - GPU Node"
+    - display_name: "Not Available - GPU Prototype"
       description: |
         This configuration gives you 2 CPUs, 3GB of RAM, and a GPU
       image: consideratio/singleuser-gpu:v0.3.0
