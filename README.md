@@ -53,9 +53,9 @@ It's **highly** recommended that you setup a dedicated project with a high numbe
 Deploying a cluster
 ===================
 
-- In `roles/k8s_cluster/defaults/main.yml` check the cluster config
-- Pay attention to `max_worker_nodes` and `flavor`, the former can be changed easily though in the future
-- This will also setup a load balancer called `<cluster_name>_in` with SSH and Kubectl access on the users behalf
+- In `playbooks/deploy_cluster.yml` check the config
+- Pay attention to `max_worker_nodes` and `flavor`, as the flavor cannot be changed after creation
+- This will also optionally setup a load balancer called `<cluster_name>_in` with SSH access on the users behalf if enabled
 - Deploy with `ansible-playbook -i <name_of_inventory> playbooks/deploy_cluster`
 - For example, to deploy to a development project `ansible-playbook -i dev_inventory/openstack.yml playbooks/deploy_cluster`
 - The status of the cluster deployment can be monitored with `watch openstack coe cluster list` or on the web GUI
@@ -66,11 +66,11 @@ Deploying a cluster
 
 Enabling GPU Workers
 --------------------
-- Edit `roles/build_gpu_driver/defaults/main.yml` to check the Nvidia driver and OS targetted
+- Edit `playbooks/build_gpu_driver.yml` to check the Nvidia driver and OS targetted
 - Run `ansible-playbook playbooks/build_gpu_driver.yml` to build and push the driver to the magnum mirror
 
 
-- In `roles/gpu_wokers/defaults/main.yml` check the configuration matches above and the desired outcome
+- In `playbooks/deploy_cluster.yml` check the configuration matches above and the desired outcome
 - If the cluster already exists comment out the init cluster step in `k8s_cluster/tasks_deploy_magnum_cluster`. Openstack will create a new cluster as this step is not idempotent.
 - Run `ansible-playbook playbooks/deploy_jhub.yml -i dev_inventory/openstack.yml`
 - In `kubectl get nodes` a new node will be deployed
@@ -89,7 +89,7 @@ Jupyter Hub Config
 ===================
 
 - Ensure that the terminal Ansible will run in can access the correct cluster (`kubectl get no`).
-- Check the config in `roles/deploy_jhub/defaults/main.yml`.
+- Check the config in `playbooks/deploy_jhub.yml`.
 - Copy `config.yaml.template` to `config.yaml` and ensure the various secrets and fields marked:
 - Go through each line checking the config values are as expected. Additional guidance is provided below:
 

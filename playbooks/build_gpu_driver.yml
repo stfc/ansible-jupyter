@@ -1,3 +1,11 @@
 - hosts: localhost
   roles:
     - build_gpu_driver
+  vars:
+    # This should match the CoreOS version, found under /etc/os_release
+    FEDORA_VERSION: 32
+    # The latest supported driver version can be seen at https://hub.docker.com/r/nvidia/driver/tags
+    NVIDIA_DRIVER_VERSION: 460.32.03
+
+    # This will be pushed to the tagged location during build
+    HARBOR_TAG: "harbor.stfc.ac.uk/magnum_mirror/nvidia_driver:{{ NVIDIA_DRIVER_VERSION }}-fedora{{ FEDORA_VERSION }}"

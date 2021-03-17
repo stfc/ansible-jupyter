@@ -1,10 +1,5 @@
-jhub_deployed_name: jhub
-jhub_namespace: jhub
-jhub_version: "0.11.1"
+# Advanced settings which shouldn't need changing
 
-# The following shouldn't need changing
+# !NOTE! : only config.yaml is in .gitignore, if you change this be sure not to commit your config by accident
 jhub_config_file: "config.yaml"
 jhub_storage_file_config: "cinder-kube-storage.yaml"
-
-# See roles/build_gpu_driver/defaults/main.yml
-NVIDIA_DRIVER_VERSION: 460.32.03

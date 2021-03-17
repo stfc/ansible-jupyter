@@ -1,6 +1,9 @@
----
-- name: Deploy Magnum Cluster + LB Access
+- name: Deploy Magnum Cluster
   include_tasks: deploy_magnum_cluster.yml
+
+- name: Deploying SSH Diagnostic LB if enabled
+  include_tasks: deploy_diag_lb.yml
+  when: "setup_lb_to_master_nodes == true"
 
 - name: Enable GPU Support on Magnum Cluster if num_gpu > 0
   include_tasks: enable_gpu.yml
