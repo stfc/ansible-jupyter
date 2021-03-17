@@ -1,5 +1,6 @@
 - name: Create Cluster Template
   openstack.cloud.coe_cluster_template:
+    cloud: "{{ cloud_name_var }}"
     coe: kubernetes
     name: "{{ cluster_name }}_template"
     image_id: "fedora-coreos-latest"
@@ -12,6 +13,7 @@
 
 - name: Init k8s stack
   openstack.cloud.coe_cluster:
+    cloud: "{{ cloud_name_var }}"
     name: "{{ cluster_name }}"
     cluster_template_id: "{{ cluster_name }}_template"
     master_flavor_id: "{{ master_flavor }}"
@@ -37,6 +39,7 @@
 
 - name: Create LB for kubectl and SSH
   openstack.cloud.loadbalancer:
+    cloud: "{{ cloud_name_var }}"
     name: "{{ cluster_name }}_master_in"
     state: present
     vip_network: Internal
@@ -58,6 +61,7 @@
 
 - name: Wait for master nodes to come up...
   openstack.cloud.server_info:
+    cloud: "{{ cloud_name_var }}"
     server: "*{{ cluster_name }}*-master*"
     filters:
       vm_state: active
@@ -68,11 +72,13 @@
 
 - name: Get subnet ID
   openstack.cloud.subnets_info:
+    cloud: "{{ cloud_name_var }}"
     name: "*{{ cluster_name }}*"
   register: subnet_result
 
 - name: Assign master nodes to ssh pools
   openstack.cloud.lb_member:
+    cloud: "{{ cloud_name_var }}"
     protocol_port: 22
     pool: "{{ cluster_name }}_ssh"
     name: "{{ item.name }}" # Use the node name
@@ -83,6 +89,7 @@
 
 - name: Assign master nodes to kubectl pools
   openstack.cloud.lb_member:
+    cloud: "{{ cloud_name_var }}"
     protocol_port: "{{ kubectl_port }}"
     pool: "{{ cluster_name }}_kubectl"
     name: "{{ item.name }}" # Use the node name

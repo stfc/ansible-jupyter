@@ -34,7 +34,7 @@ Local Environment Setup
 - Clone the repository and cd into it
 - Install requirements `ansible-galaxy collection install -r requirements.yml`
 - Obtain a copy of clouds.yaml for your project, place it in `~/.config/openstack/clouds.yaml` you may need to create the parent directory
-- Open the file and rename `openstack` to `jupyter-development`. 
+- Open the file and rename `openstack` to `jupyter-development` or `jupyter-prod`, you can have multiple sections in a single file. 
 - Insert your a password line below username with your password
 - Test using `openstack --os-cloud=jupyter-development coe cluster template list`, which will always return built-in templates
 

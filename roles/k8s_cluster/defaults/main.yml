@@ -4,7 +4,7 @@ release_version: "1-0" # Magnum will replace . with - breaking things
 cluster_name: "jupyter-{{ release_version }}"
 num_masters: 2
 num_workers: 1
-max_worker_nodes: 5
+max_worker_nodes: 20
 max_gpu_nodes: 0
 
 keypair_name: "david_fair"
