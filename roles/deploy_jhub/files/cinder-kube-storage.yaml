@@ -4,7 +4,6 @@ metadata:
   annotations:
     storageclass.kubernetes.io/is-default-class: "true"
   name: cinder-storage
-provisioner: cinder.csi.openstack.org
-reclaimPolicy: Retain
+provisioner: kubernetes.io/cinder
 parameters:
   availability: ceph
