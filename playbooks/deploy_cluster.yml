@@ -9,7 +9,7 @@
     max_worker_nodes: 20
     max_gpu_nodes: 0
 
-    keypair_name: "david_fair"
+    keypair_name: "your_keypair_name"
 
     master_flavor: "c3.small"
     worker_flavor: "c3.medium"
