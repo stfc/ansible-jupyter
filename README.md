@@ -4,6 +4,27 @@ Ansible JupyterHub Server for STFC Cloud
 Provides a Magnum Kubernetes cluster, with autoscaling enabled and configured,
 and a JupyterHub Service. This uses the helm chart provided by [ZeroToJupyterHub](https://github.com/jupyterhub/zero-to-jupyterhub-k8s).
 
+Features
+========
+
+- Oauth2 or Local Authentication
+- Multiple profiles for different resources limits
+- Node Autoscaling on Openstack
+- Placeholder support for the default profile, allowing users to get a Jupyter server in <3 minutes
+- Ability to use mixed node sizes (w/ autoscaling)
+- Nvidia GPU Support (w/ autoscaling)
+- Cinder support (see limitations)
+- Automatic HTTPS support, can have a instance up in <1 hour (with pre-requisites in place)
+
+Limitations
+===========
+
+- Existing Cinder volumes cannot be re-attached/transferred on cluster re-creation
+- The primary worker/master flavour cannot be changed after creation
+- Cannot use placeholders for optional profiles (e.g. GPU placeholder)
+- Each node takes 10-15 minutes to spin up due to Magnum overhead, if no placeholders are available a user will have to wait this long.
+
+
 Local Environment Setup
 =======================
 
@@ -13,7 +34,7 @@ Local Environment Setup
 - Clone the repository and cd into it
 - Install requirements `ansible-galaxy collection install -r requirements.yml`
 - Obtain a copy of clouds.yaml for your project, place it in `~/.config/openstack/clouds.yaml` you may need to create the parent directory
-- Open the file and rename `openstack` to `jupyter-development`. 
+- Open the file and rename `openstack` to `jupyter-development` or `jupyter-prod`, you can have multiple sections in a single file. 
 - Insert your a password line below username with your password
 - Test using `openstack --os-cloud=jupyter-development coe cluster template list`, which will always return built-in templates
 
@@ -32,46 +53,64 @@ It's **highly** recommended that you setup a dedicated project with a high numbe
 Deploying a cluster
 ===================
 
-- In `roles/k8s_cluster/defaults/main.yml` check the cluster config
-- Pay attention to `max_worker_nodes` and `flavor`, the former can be changed easily though in the future
-- This will also setup a load balancer called `<cluster_name>_in` with SSH and Kubectl access on the users behalf
+- In `playbooks/deploy_cluster.yml` check the config
+- Pay attention to `max_worker_nodes` and `flavor`, as the flavor cannot be changed after creation
+- This will also optionally setup a load balancer called `<cluster_name>_in` with SSH access on the users behalf if enabled
 - Deploy with `ansible-playbook -i <name_of_inventory> playbooks/deploy_cluster`
-- The status of the cluster deployment can be monitored with `watch openstack coe cluster list`
-- One deployed pull the config to your local machine with `openstack coe cluster config <cluster_name>`. This will copy a `config` file into your current dir
-- Export the kubectl config as described by the previous command
+- For example, to deploy to a development project `ansible-playbook -i dev_inventory/openstack.yml playbooks/deploy_cluster`
+- The status of the cluster deployment can be monitored with `watch openstack coe cluster list` or on the web GUI
+- One deployed pull the config to your local machine with `openstack coe cluster config <cluster_name>`. This will copy a `config` file into your current directory
+- Export the kubectl config after the config command finishes
 - Check for kubectl connectivity `kubectl get nodes`
 - Check that all pods are created successfully with `kubectl get pods -n kube-system`
 
 Enabling GPU Workers
 --------------------
-- Edit `roles/build_gpu_driver/defaults/main.yml` to check the Nvidia driver and OS targetted
+- Edit `playbooks/build_gpu_driver.yml` to check the Nvidia driver and OS targetted
 - Run `ansible-playbook playbooks/build_gpu_driver.yml` to build and push the driver to the magnum mirror
 
 
-- In `roles/gpu_wokers/defaults/main.yml` check the configuration matches above and the desired outcome
+- In `playbooks/deploy_cluster.yml` check the configuration matches above and the desired outcome
 - If the cluster already exists comment out the init cluster step in `k8s_cluster/tasks_deploy_magnum_cluster`. Openstack will create a new cluster as this step is not idempotent.
 - Run `ansible-playbook playbooks/deploy_jhub.yml -i dev_inventory/openstack.yml`
 - In `kubectl get nodes` a new node will be deployed
 - The status of the Nvidia driver on the guest can be monitored with `kubectl get all -n gpu-operator-resources`
 
 
-Updating Autoscaler
---------------------
+Updating Autoscaler to scale GPU nodes
+--------------------------------------
 The cluster autoscaler must be informed how to scale these nodes:
 - Edit the deployment with `kubectl edit deploy/cluster-autoscaler -n kube-system`
-- Find the line with `1:n:default-worker` where n is the max number of workers
-- Insert another line below, taking care to have 3 dashes: `- --1:n:gpu-worker` where n is the max instances of GPU workers
-- Save, this should enable autoscaling on GPU instances
+- Find the line with `1:n:default-worker` where n is the max number of workers and 1 is the minimum number
+- Insert another line below, taking care to have 3 dashes: `- --1:n:gpu-worker` to enable scaling on GPU workers
+- Save, this should enable autoscaling on GPU instances and can be monitored with `kubectl logs deploy/cluster-autoscaler -n kube-system --follow`
 
-Deploying Jupyter Hub
-=====================
+Jupyter Hub Config
+===================
 
-- Ensure that the terminal Ansible will run in can access the cluster (`kubectl get no`).
-- Check the config in `roles/deploy_jhub/defaults/main.yml`
-- Copy `config.yaml.template` to `config.yaml` and ensure the various secrets and fields marked.
+- Ensure that the terminal Ansible will run in can access the correct cluster (`kubectl get no`).
+- Check the config in `playbooks/deploy_jhub.yml`.
+- Copy `config.yaml.template` to `config.yaml` and ensure the various secrets and fields marked:
+- Go through each line checking the config values are as expected. Additional guidance is provided below:
 
-Getting IRIS IAM Secrets
-------------------------
+Setting up DNS
+--------------
+
+Lets Encrypt is used to handle HTTPS certificates automatically. Jupyterhub can have unusual problems in HTTP mode only, so I would strongly strongly advice you run it with some level of TLS.
+
+Simply ensure you have:
+- An external IP address
+- A internet routable domain name
+- A (optionally/and/or) AAAA record(s) pointing to the IP address
+
+Update the config file with the domain name, by default it's set to `jupyter.stfc.ac.uk`.
+
+Getting Oauth Secrets
+----------------------
+
+For simple deployments where a list of authorized users is suitable simply use the native authenticator and see below.
+
+If you are using another OAuth provider please contact them for support.
 
 If you are using IRIS IAM the secrets must be generated for the config file as follows:
 
@@ -84,15 +123,23 @@ If you are using IRIS IAM the secrets must be generated for the config file as f
 - Save the generated ID/secrets. 
 - Take note of the **registration token**, this is not used in config but you will not be able to access / modify your token afterward without it.
 
-Continuing Deployment
----------------------
+Setting users / admin groups for Oauth
+--------------------------------------
 
-- The instances available and the associated sizes can also be modified in config.yaml
+By default the config template assumes the user will be using groups with Oauth to limit access to approved groups and assign admin privileges.
+
+Simply modify the `allowed_groups` and `admin_groups` contains the group names you intend to be allowed access and admin privileges respectively.
+
+If you want anyone who completes the Oauth login to access the service simply remove all entries from both lists to allow user-only access to anyone who signs in.
+
+Deploying Jupyter hub
+=====================
+
 - Login to the openstack GUI before deploying, as this saves a step later...
-- Deploy the jupyterhub instance with `ansible-playbook -i <inventory_name> playbooks/deploy_jhub.yml`
-- Whilst it's deploying go to Network -> Load Balancers, look for one labelled with `proxy_public`for JHub
-- Take note of the 10.0.x.x IP, go to Floating IPs (FIP)
-- Associate your prepared FIP to that whilst the load balancer is being created.
+- Deploy the jupyterhub instance with `ansible-playbook playbooks/deploy_jhub.yml`
+- Whilst it's deploying go to Network -> Load Balancers, look for one labelled with `proxy_public`for JHub, it may take a minute to appear as images are pulled.
+- Take note of the 10.0.x.x IP, go to Floating IPs (FIP).
+- Associate your prepared FIP with matching DNS records to that whilst the load balancer is being created.
 - If Magnum managed to associate a random FIP before you disassociate and release. But this will happen as the final step of creating the load balancer if you haven't already.
 
 Kubectl Namespaces

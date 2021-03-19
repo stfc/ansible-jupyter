@@ -1,5 +1,6 @@
 - name: Create Cluster Template
   openstack.cloud.coe_cluster_template:
+    cloud: "{{ cloud_name_var }}"
     coe: kubernetes
     name: "{{ cluster_name }}_template"
     image_id: "fedora-coreos-latest"
@@ -12,11 +13,12 @@
 
 - name: Init k8s stack
   openstack.cloud.coe_cluster:
+    cloud: "{{ cloud_name_var }}"
     name: "{{ cluster_name }}"
     cluster_template_id: "{{ cluster_name }}_template"
     master_flavor_id: "{{ master_flavor }}"
     flavor_id: "{{ worker_flavor }}"
-    keypair: "david_fair"
+    keypair: "{{ keypair_name }}"
     master_count: "{{ num_masters }}"
     node_count: "{{ num_workers }}"
     state: present
@@ -34,59 +36,3 @@
       kube_tag: "{{ kube_tag }}"
       etcd_tag: "{{ etcd_tag }}"
   register: stack_result
-
-- name: Create LB for kubectl and SSH
-  openstack.cloud.loadbalancer:
-    name: "{{ cluster_name }}_master_in"
-    state: present
-    vip_network: Internal
-    listeners:
-      - name: "{{ cluster_name }}_kubectl"
-        protocol: TCP
-        protocol_port: "{{ kubectl_port }}"
-        pool:
-          name: "{{ cluster_name }}_kubectl"
-          protocol: TCP
-      - name: "{{ cluster_name }}_ssh"
-        protocol: TCP
-        protocol_port: 22
-        pool:
-          name: "{{ cluster_name }}_ssh"
-          protocol: TCP
-    wait: yes
-  register: kubectl_lb_result
-
-- name: Wait for master nodes to come up...
-  openstack.cloud.server_info:
-    server: "*{{ cluster_name }}*-master*"
-    filters:
-      vm_state: active
-  register: master_instances_result
-  until: master_instances_result.openstack_servers | length == num_masters
-  retries: 60
-  delay: 30 # Try every 30 seconds for 30 minutes
-
-- name: Get subnet ID
-  openstack.cloud.subnets_info:
-    name: "*{{ cluster_name }}*"
-  register: subnet_result
-
-- name: Assign master nodes to ssh pools
-  openstack.cloud.lb_member:
-    protocol_port: 22
-    pool: "{{ cluster_name }}_ssh"
-    name: "{{ item.name }}" # Use the node name
-    address: "{{ item.addresses[cluster_name][0].addr }}"
-    subnet_id: "{{ subnet_result.openstack_subnets[0].id }}"
-    state: present
-  with_items: "{{ master_instances_result.openstack_servers }}"
-
-- name: Assign master nodes to kubectl pools
-  openstack.cloud.lb_member:
-    protocol_port: "{{ kubectl_port }}"
-    pool: "{{ cluster_name }}_kubectl"
-    name: "{{ item.name }}" # Use the node name
-    address: "{{ item.addresses[cluster_name][0].addr }}"
-    subnet_id: "{{ subnet_result.openstack_subnets[0].id }}"
-    state: present
-  with_items: "{{ master_instances_result.openstack_servers }}"

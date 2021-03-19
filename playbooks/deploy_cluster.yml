@@ -1,3 +1,22 @@
 - hosts: localhost # Openstack is configured from this machine
   roles:
     - k8s_cluster
+  vars:
+    release_version: "1-0" # Magnum will replace . with - breaking things
+    cluster_name: "jupyter-{{ release_version }}"
+    num_masters: 2
+    num_workers: 1
+    max_worker_nodes: 20
+    max_gpu_nodes: 0
+
+    keypair_name: "david_fair"
+
+    master_flavor: "c3.small"
+    worker_flavor: "c3.medium"
+    gpu_flavor: "g-p4000.x1"
+
+    # Useful for diagnostics, but should only be created when required
+    setup_lb_to_master_nodes: false
+
+    # Comment out to use dockerhub directly
+    mirror_url: harbor.stfc.ac.uk/magnum_mirror/
