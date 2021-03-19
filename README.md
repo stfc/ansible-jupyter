@@ -117,7 +117,7 @@ A Kubernetes secret is used, instructions can be found [here](https://zero-to-ju
 Using Oauth Sign in
 -------------------
 
-For short-term deployments where a list of authorized users is suitable simply use the native authenticator and see below.
+For short-term deployments, where a list of authorized users is suitable, simply use the native authenticator and see below.
 
 If you are using another OAuth provider please contact them for support.
 
@@ -140,16 +140,16 @@ By default the config template assumes the user will be using groups with Oauth 
 
 Simply modify the `allowed_groups` and `admin_groups` contains the group names you intend to be allowed access and admin privileges respectively.
 
-If you want anyone who completes the Oauth login to access the service simply remove all entries from both lists to allow user-only access to anyone who signs in. This will also disable admin accounts too.
+To allow anyone who completes Oauth login access, simply remove all entries from both lists. This will also disable admin accounts too.
 
 Using Native Authenticator
 --------------------------
 
-If your service is short lived (<1 month) then an alternative is to use the Native Authenticator. This is especially useful for running events where users won't have an IAM account (e.g. school outreach).
+If your service is short lived (<1 month), then an alternative is to use the Native Authenticator. This is especially useful for running events where users won't have an IAM account (e.g. school outreach).
 
-In this mode anybody can sign up, however before they can access the service their account most be approved my any of the pre-defined admin accounts.
+In this mode anybody can sign up, however, before they can access the service their account most be approved by any of the pre-defined admin accounts.
 
-Note: This deployment is **not** suitable for long-term deployments, as the hashed passwords are stored within the cluster. Instead invest the time to use OAuth or LDAP, so that your password hashes are stored on an actively maintained external service.
+Note: This deployment is **not** suitable for long-term deployments; the hashed passwords are stored within the cluster which typically is not actively maintained after deployment. Instead invest the time to use OAuth or LDAP, so that your password hashes are stored on an actively maintained external service.
 
 To use the Native Authenticator:
 
@@ -159,7 +159,7 @@ To use the Native Authenticator:
 - After service deployment you'll need to sign up as the admin user
 - The sign up page will state your account needs conformation, for an admin account you can now login directly
 
-**Important:** As admin account credentials are created via a 'sign up' these must be registered immediately after creation to secure them against someone else registering them instead.
+**Important:** As admin account credentials are created via a 'sign up'. These must be registered immediately after creation to secure them against someone else registering them instead.
 
 To authorize users after they sign up navigate to `/hub/authorize` (e.g. https://example.com/hub/authorize ). Unfortunately, there is no button to access this page so the URL must be directly changed.
 
