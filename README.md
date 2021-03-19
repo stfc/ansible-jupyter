@@ -93,8 +93,8 @@ Jupyter Hub Config
 - Copy `config.yaml.template` to `config.yaml` and ensure the various secrets and fields marked:
 - Go through each line checking the config values are as expected. Additional guidance is provided below:
 
-Setting up DNS
---------------
+Setting up DNS for Lets Encrypt
+-------------------------------
 
 Lets Encrypt is used to handle HTTPS certificates automatically. Jupyterhub can have unusual problems in HTTP mode only, so I would strongly strongly advice you run it with some level of TLS.
 
@@ -105,10 +105,19 @@ Simply ensure you have:
 
 Update the config file with the domain name, by default it's set to `jupyter.stfc.ac.uk`.
 
-Getting Oauth Secrets
-----------------------
+Using existing TLS Certificate
+------------------------------
 
-For simple deployments where a list of authorized users is suitable simply use the native authenticator and see below.
+Alternatively, if you already have an existing certificate and don't want to expose the service externally you can manually provide a certificate.
+
+The primary disadvantage of this, is both remembering to renew the certificate annually and the associated downtime compared to the automatic Lets Encrypt method.
+
+A Kubernetes secret is used, instructions can be found [here](https://zero-to-jupyterhub.readthedocs.io/en/latest/administrator/security.html#specify-certificate-through-secret-resource)
+
+Using Oauth Sign in
+-------------------
+
+For short-term deployments where a list of authorized users is suitable simply use the native authenticator and see below.
 
 If you are using another OAuth provider please contact them for support.
 
@@ -122,6 +131,7 @@ If you are using IRIS IAM the secrets must be generated for the config file as f
 - Under scopes untick everything except `openid` `preferred_username`, `profile` and `email`.
 - Save the generated ID/secrets. 
 - Take note of the **registration token**, this is not used in config but you will not be able to access / modify your token afterward without it.
+- Copy `config-oauth.yaml.template` to config.yaml and populate the file with the above details.
 
 Setting users / admin groups for Oauth
 --------------------------------------
@@ -130,7 +140,28 @@ By default the config template assumes the user will be using groups with Oauth 
 
 Simply modify the `allowed_groups` and `admin_groups` contains the group names you intend to be allowed access and admin privileges respectively.
 
-If you want anyone who completes the Oauth login to access the service simply remove all entries from both lists to allow user-only access to anyone who signs in.
+If you want anyone who completes the Oauth login to access the service simply remove all entries from both lists to allow user-only access to anyone who signs in. This will also disable admin accounts too.
+
+Using Native Authenticator
+--------------------------
+
+If your service is short lived (<1 month) then an alternative is to use the Native Authenticator. This is especially useful for running events where users won't have an IAM account (e.g. school outreach).
+
+In this mode anybody can sign up, however before they can access the service their account most be approved my any of the pre-defined admin accounts.
+
+Note: This deployment is **not** suitable for long-term deployments, as the hashed passwords are stored within the cluster. Instead invest the time to use OAuth or LDAP, so that your password hashes are stored on an actively maintained external service.
+
+To use the Native Authenticator:
+
+- Copy `config-native-auth.yaml.template` to `config.yaml`
+- Change the number and name of admin usernames as appropriate
+- Uncomment and fill allowed_user, which is a user name whitelist, if required
+- After service deployment you'll need to sign up as the admin user
+- The sign up page will state your account needs conformation, for an admin account you can now login directly
+
+**Important:** As admin account credentials are created via a 'sign up' these must be registered immediately after creation to secure them against someone else registering them instead.
+
+To authorize users after they sign up navigate to `/hub/authorize` (e.g. https://example.com/hub/authorize ). Unfortunately, there is no button to access this page so the URL must be directly changed.
 
 Deploying Jupyter hub
 =====================
