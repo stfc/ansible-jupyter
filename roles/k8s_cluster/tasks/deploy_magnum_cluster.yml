@@ -28,6 +28,8 @@
       kube_dashboard_enabled: false
       auto_healing_enable: true
       auto_scaling_enabled: true
+      cloud_provider_enabled: true # required for cinder_csi
+      cinder_csi_enabled: true
       master_lb_floating_ip_enabled: true
       max_node_count: "{{ max_worker_nodes }}"
       container_infra_prefix: "{{ mirror_url }}"
