@@ -27,7 +27,7 @@ singleuser:
         mountPath: /dev/shm
 
     type: dynamic
-    capacity: 1Gi # 1GB is the minimum Cinder will serve
+    capacity: 10Gi # 1GB is the minimum Cinder will serve
     dynamic:
       storageClass: cinder-storage
 
