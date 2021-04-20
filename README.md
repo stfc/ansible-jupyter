@@ -77,13 +77,61 @@ Enabling GPU Workers
 - The status of the Nvidia driver on the guest can be monitored with `kubectl get all -n gpu-operator-resources`
 
 
-Updating Autoscaler to scale GPU nodes
+Manual Cluster config for GPU Workers
 --------------------------------------
 The cluster autoscaler must be informed how to scale these nodes:
 - Edit the deployment with `kubectl edit deploy/cluster-autoscaler -n kube-system`
 - Find the line with `1:n:default-worker` where n is the max number of workers and 1 is the minimum number
 - Insert another line below, taking care to have 3 dashes: `- --1:n:gpu-worker` to enable scaling on GPU workers
 - Save, this should enable autoscaling on GPU instances and can be monitored with `kubectl logs deploy/cluster-autoscaler -n kube-system --follow`
+
+If you are seeing errors that the annotation `csi.volume.kubernetes.io/nodeid` is missing whilst trying to start an instance on a GPU node you need to manually adjust the CSI plugin:
+
+CSI plugins will not deploy on tainted nodes (e.g. GPU instances) preventing us from using Cinder shares. An [upstream fix](https://review.opendev.org/c/openstack/magnum/+/782527) has been backported to certain versions. This can easily be resolved too:
+
+- Run `kubectl edit daemonset/csi-cinder-nodeplugin -n kube-system`
+- Scroll down to the configuration for `csi-cinder-nodeplugin` it will look something like this:
+
+```
+  name: csi-cinder-nodeplugin
+  namespace: kube-system
+  resourceVersion: "5800"
+  selfLink: /apis/apps/v1/namespaces/kube-system/daemonsets/csi-cinder-nodeplugin
+  uid: 5a9c87c4-d01c-4325-b388-4ee7d43e15a5
+spec:
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: csi-cinder-nodeplugin
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: csi-cinder-nodeplugin
+    spec:
+      containers:
+      - args:
+```
+
+- Add the [following changes](https://github.com/kubernetes/cloud-provider-openstack/pull/1276/files#diff-c8af329d87fa66e42453db753cc7f9c7c25812d91c5276a55b9d4e1399a1b009R19) so that is now looks like:
+
+```
+spec:
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: csi-cinder-nodeplugin
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: csi-cinder-nodeplugin
+    spec:
+      tolerations:
+        - operator: Exists
+```
+
+This will now deploy `csi-cinder-nodeplugin` to all nodes regardless of taint. To verify you can check the number of desired pods, it should equal your total number of nodes in `kubectl get daemonset -n kube-system`
 
 Jupyter Hub Config
 ===================

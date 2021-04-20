@@ -32,6 +32,7 @@ singleuser:
       storageClass: cinder-storage
 
   # Default profile, this is what the placeholders will use
+  startTimeout: 1200 # seconds == 20 minutes
   cpu:
     limit: 2
     guarantee: 0.05
@@ -42,16 +43,17 @@ singleuser:
   profileList:
     - display_name: "Default: Normal Size"
       description: |
-        For small jobs and prototyping: 2 CPUs, 1.5GB RAM and no GPU. This is the default.
+        For small jobs and prototyping: 2 CPUs, 1.5GB RAM and no GPU. This is the default, and will usually start in ~2 minutes. During periods of high-contention it may take up to 20 minutes to create.
       default: True
     - display_name: "Large Memory Instance"
       description: |
-        For larger jobs. 8 CPUs, 7.5GB RAM and no GPU.
+        For larger jobs. 8 CPUs, 7.5GB RAM and no GPU. This may
+        take up to 20 minutes to create.
       kubespawner_override:
         cpu_limit: 8
         cpu_guarantee: 0.05
         mem_limit: "7.5G"
-        mem_guaranttee: "7.5G"
+        mem_guarantee: "7.5G"
         extra_resource_limits: {}
     # - display_name: "GPU"
     #   description: |
