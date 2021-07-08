@@ -40,7 +40,7 @@
 
 - name: Install Nvidia GPU Operator repo
   community.kubernetes.helm_repository:
-    name: gpu-operator
+    name: nvidia
     repo_url: https://nvidia.github.io/gpu-operator
 
 - name: Install GPU Operator, pointing to own driver
