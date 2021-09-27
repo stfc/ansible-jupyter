@@ -12,6 +12,10 @@
     kind: Namespace
     state: present
 
+- name: create ssl cert (only in test)
+  command:
+    kubectl create secret tls example-tls --key="{{ role_path }}/files/example.key" --cert="{{ role_path }}/files/example.crt" --namespace="{{ jhub_namespace }}"
+
 - name: Install jhub helm repo
   community.kubernetes.helm_repository:
     name: jupyterhub
@@ -29,6 +33,11 @@
     values_files:
       - "{{ role_path }}/files/{{ jhub_config_file }}"
 
+- name: Install nVidia helm repo
+  community.kubernetes.helm_repository:
+    name: nvidia
+    repo_url: https://nvidia.github.io/gpu-operator
+
 - name: Create namespace for Nvidia components
   community.kubernetes.k8s:
     name: "{{ item }}"
@@ -37,6 +46,11 @@
   with_items:
     - gpu-operator
     - gpu-operator-resources
+
+- name: Create the priorityClassName for nvidiaComponent
+  community.kubernetes.k8s:
+    state: present
+    src: "{{ role_path }}/files/nvidia-priority-class.yaml"
 
 - name: Install Nvidia GPU Operator repo
   community.kubernetes.helm_repository:
@@ -51,7 +65,75 @@
     name: gpu-operator
     release_namespace: gpu-operator
     release_values:
+      daemonsets:
+        priorityClassName: nvidia-priority-class
+      operator:
+        priorityClassName: nvidia-priority-class
       driver:
         repository: "harbor.stfc.ac.uk/magnum_mirror"
         image: "nvidia_driver"
         version: "{{ NVIDIA_DRIVER_VERSION }}"
+
+
+- name: Install prometheus helm repo
+  community.kubernetes.helm_repository:
+    name: prometheus-community
+    repo_url: https://prometheus-community.github.io/helm-charts
+
+- name: Create the working namespace
+  community.kubernetes.k8s:
+    name: "{{ prometheus_namespace }}"
+    kind: Namespace
+    state: present
+
+- name: Install pre-set version of prometheus
+  community.kubernetes.helm:
+    chart_ref: prometheus-community/kube-prometheus-stack
+    create_namespace: yes
+    update_repo_cache: yes
+    # Pulled from default
+    name: "{{ prometheus_deployed_name }}"
+    release_namespace: "{{ prometheus_namespace }}"
+    release_values:
+      grafana:
+        adminPassword: "{{ grafana_password }}"
+
+        ## Passed to grafana subchart and used by servicemonitor below
+        ##
+        service:
+          enabled: true
+          type: LoadBalancer
+          port: 3000
+          targetPort: 3000
+            # targetPort: 4181 To be used with a proxy extraContainer
+          portName: service
+        ## If true, create a serviceMonitor for grafana
+        ##
+      ## Deploy a Prometheus instance
+      ##
+      prometheus:
+        service:
+          port: 9090
+          targetPort: 9090
+          type: LoadBalancer   
+        prometheusSpec:
+          serviceMonitorSelectorNilUsesHelmValues: false
+        additionalServiceMonitors:
+        # Name of the ServiceMonitor to create
+        # for jupyterhub_metrics
+        - name: "{{ jhub_deployed_name }}-https-service"
+          namespaceSelector:
+            matchNames:
+            - "{{ jhub_namespace }}"
+          selector:
+            matchLabels:
+              component: proxy-public
+          endpoints:
+          - targetPort: https
+            path: /hub/metrics
+            scheme: https
+            #can be disable. This is for developemnt where the self signed ssl cert is used
+            tlsConfig:
+              insecureSkipVerify: true 
+    values_files:
+      - "{{ role_path }}/files/prom_config.yaml"

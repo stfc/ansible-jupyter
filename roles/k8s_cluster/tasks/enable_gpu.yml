@@ -16,5 +16,5 @@
   command: >
     openstack --os-cloud={{ cloud_name_var }} coe nodegroup create {{ cluster_name }} gpu-worker
     --min-nodes 1 --node-count 1 --max-nodes {{ max_gpu_nodes }} --role gpu --flavor {{ gpu_flavor }}
-    --labels kubelet_options='--register-with-taints={{ gpu_taint }}'
+    --labels kubelet_options='--register-with-taints={{ gpu_taint }}',kube_tag="{{ kube_tag }}"
   when: '"gpu-worker" not in node_group_result.stdout'

@@ -3,11 +3,18 @@
     - deploy_jhub
   vars:
     # Helm name of the service
-    jhub_deployed_name: jhub
+    jhub_deployed_name: jupyterhub
     # K8s namespace
-    jhub_namespace: jhub
+    jhub_namespace: jupyterhub
     # Helm chart version for Jhub
     jhub_version: "0.11.1"
+
+    # Helm name of the prometheus service
+    prometheus_deployed_name: prometheus
+    # K8s namespace
+    prometheus_namespace: prometheus
+    # Grafana dashboard admin password
+    grafana_password: "temp_password"
 
     # Even if you don't use GPUs we deploy the Nvidia GPU operator
     # for simplicity (otherwise we need another var to enable GPU support across notebooks).

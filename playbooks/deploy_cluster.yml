@@ -2,14 +2,14 @@
   roles:
     - k8s_cluster
   vars:
-    release_version: "1-0" # Magnum will replace . with - breaking things
+    release_version: "1-1" # Magnum will replace . with - breaking things
     cluster_name: "jupyter-{{ release_version }}"
     num_masters: 2
     num_workers: 1
-    max_worker_nodes: 20
-    max_gpu_nodes: 0
+    max_worker_nodes: 10
+    max_gpu_nodes: 4
 
-    keypair_name: "your_keypair_name"
+    keypair_name: "DonaldUserKeyPair"
 
     master_flavor: "c3.small"
     worker_flavor: "c3.medium"
