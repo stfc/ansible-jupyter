@@ -30,7 +30,7 @@ singleuser:
       storageClass: cinder-storage
 
   # Default profile, this is what the placeholders will use
-  startTimeout: 2400 # seconds == 40 minutes, the GPU operator need to install the driver which can take slightly longer
+  startTimeout: 1800 # seconds == 30 minutes, the GPU operator need to install the driver which can take slightly longer
   cpu:
     limit: 2
     guarantee: 0.05

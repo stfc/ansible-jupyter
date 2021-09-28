@@ -1,4 +1,0 @@
-driver:
-  repository: "harbor.stfc.ac.uk/magnum_mirror"
-  image: "nvidia_driver"
-  version: "460.32.03"

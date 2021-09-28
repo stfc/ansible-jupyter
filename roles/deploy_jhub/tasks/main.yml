@@ -33,11 +33,6 @@
     values_files:
       - "{{ role_path }}/files/{{ jhub_config_file }}"
 
-- name: Install nVidia helm repo
-  community.kubernetes.helm_repository:
-    name: nvidia
-    repo_url: https://nvidia.github.io/gpu-operator
-
 - name: Create namespace for Nvidia components
   community.kubernetes.k8s:
     name: "{{ item }}"
@@ -48,13 +43,15 @@
     - gpu-operator-resources
 
 - name: Create the priorityClassName for nvidiaComponent
+  # The default will set gpu daemonset and operator at system-node-critical 
+  # which can't start outside of kube-system namespace in earlier version of k8s (<1.17)
   community.kubernetes.k8s:
     state: present
     src: "{{ role_path }}/files/nvidia-priority-class.yaml"
 
 - name: Install Nvidia GPU Operator repo
   community.kubernetes.helm_repository:
-    name: gpu-operator
+    name: nvidia
     repo_url: https://nvidia.github.io/gpu-operator
 
 - name: Install GPU Operator, pointing to own driver
@@ -80,7 +77,7 @@
     name: prometheus-community
     repo_url: https://prometheus-community.github.io/helm-charts
 
-- name: Create the working namespace
+- name: Create the prometheus namespace
   community.kubernetes.k8s:
     name: "{{ prometheus_namespace }}"
     kind: Namespace
@@ -97,21 +94,16 @@
     release_values:
       grafana:
         adminPassword: "{{ grafana_password }}"
-
-        ## Passed to grafana subchart and used by servicemonitor below
-        ##
         service:
           enabled: true
           type: LoadBalancer
           port: 3000
           targetPort: 3000
-            # targetPort: 4181 To be used with a proxy extraContainer
           portName: service
-        ## If true, create a serviceMonitor for grafana
-        ##
       ## Deploy a Prometheus instance
       ##
       prometheus:
+        #set up externeal access for prometheus portal
         service:
           port: 9090
           targetPort: 9090
@@ -132,8 +124,9 @@
           - targetPort: https
             path: /hub/metrics
             scheme: https
-            #can be disable. This is for developemnt where the self signed ssl cert is used
+            #can be disabled. This is for developemnt where a self signed ssl cert is used
             tlsConfig:
               insecureSkipVerify: true 
     values_files:
+      #the gpu metric scrapper have incompetable syntax and so should be placed in a separate file
       - "{{ role_path }}/files/prom_config.yaml"

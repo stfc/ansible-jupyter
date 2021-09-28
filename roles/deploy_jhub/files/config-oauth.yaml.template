@@ -73,6 +73,8 @@ singleuser:
     #       nvidia.com/gpu: "1"
 
 hub:
+  #remove login for metrics collection
+  authenticatePrometheus: false 
   config:
     Authenticator:
       # Whilst auto-login would be nice it dumps users at IRIS IAM with no warning

@@ -32,7 +32,7 @@ singleuser:
       storageClass: cinder-storage
 
   # Default profile, this is what the placeholders will use
-  startTimeout: 1200 # seconds == 20 minutes
+  startTimeout: 1800 # seconds == 30 minutes
   cpu:
     limit: 2
     guarantee: 0.05
@@ -83,6 +83,8 @@ hub:
       # Uncomment allowed_users and insert the list of user names allowed to sign-up using the same format as above, if required.
     JupyterHub:
       authenticator_class: nativeauthenticator.NativeAuthenticator
+  #remove login for metrics collection
+  authenticatePrometheus: false
 
 scheduling:
   # Try to pack users tightly rather than spinning up one node per user

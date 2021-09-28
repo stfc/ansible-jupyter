@@ -2,7 +2,7 @@
   roles:
     - k8s_cluster
   vars:
-    release_version: "1-1" # Magnum will replace . with - breaking things
+    release_version: "1-2" # Magnum will replace . with - breaking things
     cluster_name: "jupyter-{{ release_version }}"
     num_masters: 2
     num_workers: 1
