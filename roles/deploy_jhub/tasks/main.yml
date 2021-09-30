@@ -100,6 +100,30 @@
           port: 3000
           targetPort: 3000
           portName: service
+        dashboardProviders:
+          dashboardproviders.yaml:
+            apiVersion: 1
+            providers:
+            - name: 'stfc'
+              orgId: 1
+              folder: 'stfc'
+              type: file
+              disableDeletion: false
+              allowUiUpdates: true
+              options:
+                path: /var/lib/grafana/dashboards/stfc
+
+        ## Configure grafana dashboard to import
+        ## NOTE: To use dashboards you must also enable/configure dashboardProviders
+        ## ref: https://grafana.com/dashboards
+        ##
+        ## dashboards per provider, use provider name as key.
+        ##
+        dashboards:
+          stfc:
+            local-dashboard:
+              url: https://raw.githubusercontent.com/Donald954732/Jupyterhub-GPU-Dashboard/main/dashboard.json       
+              datasource: Prometheus   
       ## Deploy a Prometheus instance
       ##
       prometheus:
