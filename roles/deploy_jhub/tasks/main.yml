@@ -1,13 +1,13 @@
 - name: Test K8s service is contactable. If this fails check $KUBECONFIG is set.
-  community.kubernetes.k8s_cluster_info:
+  kubernetes.core.k8s_cluster_info:
 
 - name: Enable PV Claims on Cinder
-  community.kubernetes.k8s:
+  kubernetes.core.k8s:
     state: present
     src: "{{ role_path }}/files/{{ jhub_storage_file_config }}"
 
 - name: Create the working namespace
-  community.kubernetes.k8s:
+  kubernetes.core.k8s:
     name: "{{ jhub_namespace }}"
     kind: Namespace
     state: present
@@ -17,12 +17,12 @@
     kubectl create secret tls example-tls --key="{{ role_path }}/files/example.key" --cert="{{ role_path }}/files/example.crt" --namespace="{{ jhub_namespace }}"
 
 - name: Install jhub helm repo
-  community.kubernetes.helm_repository:
+  kubernetes.core.helm_repository:
     name: jupyterhub
     repo_url: https://jupyterhub.github.io/helm-chart/
 
 - name: Install pre-set version of Jhub
-  community.kubernetes.helm:
+  kubernetes.core.helm:
     chart_ref: jupyterhub/jupyterhub
     create_namespace: yes
     update_repo_cache: yes
@@ -34,7 +34,7 @@
       - "{{ role_path }}/files/{{ jhub_config_file }}"
 
 - name: Create namespace for Nvidia components
-  community.kubernetes.k8s:
+  kubernetes.core.k8s:
     name: "{{ item }}"
     kind: Namespace
     state: present
@@ -45,17 +45,17 @@
 - name: Create the priorityClassName for nvidiaComponent
   # The default will set gpu daemonset and operator at system-node-critical 
   # which can't start outside of kube-system namespace in earlier version of k8s (<1.17)
-  community.kubernetes.k8s:
+  kubernetes.core.k8s:
     state: present
     src: "{{ role_path }}/files/nvidia-priority-class.yaml"
 
 - name: Install Nvidia GPU Operator repo
-  community.kubernetes.helm_repository:
+  kubernetes.core.helm_repository:
     name: nvidia
     repo_url: https://nvidia.github.io/gpu-operator
 
 - name: Install GPU Operator, pointing to own driver
-  community.kubernetes.helm:
+  kubernetes.core.helm:
     chart_ref: nvidia/gpu-operator
     update_repo_cache: yes
     # Pulled from default
@@ -67,24 +67,24 @@
       operator:
         priorityClassName: nvidia-priority-class
       driver:
-        repository: "harbor.stfc.ac.uk/magnum_mirror"
+        repository: "harbor.stfc.ac.uk/stfc-cloud-private"
         image: "nvidia_driver"
         version: "{{ NVIDIA_DRIVER_VERSION }}"
 
 
 - name: Install prometheus helm repo
-  community.kubernetes.helm_repository:
+  kubernetes.core.helm_repository:
     name: prometheus-community
     repo_url: https://prometheus-community.github.io/helm-charts
 
 - name: Create the prometheus namespace
-  community.kubernetes.k8s:
+  kubernetes.core.k8s:
     name: "{{ prometheus_namespace }}"
     kind: Namespace
     state: present
 
 - name: Install pre-set version of prometheus
-  community.kubernetes.helm:
+  kubernetes.core.helm:
     chart_ref: prometheus-community/kube-prometheus-stack
     create_namespace: yes
     update_repo_cache: yes
