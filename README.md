@@ -14,7 +14,9 @@ Features
 - Ability to use mixed node sizes (w/ autoscaling)
 - Nvidia GPU Support (w/ autoscaling)
 - Cinder support (see limitations)
-- Automatic HTTPS support, can have a instance up in <1 hour (with pre-requisites in place)
+- Automatic HTTPS support, can have a instan/ce up in <1 hour (with pre-requisites in place)
+- Deploy Prometheus stack to monitor the cluster
+- Deploy a pre-configured Grafana dashboard for monitoring GPU and JupyterHub
 
 Limitations
 ===========
