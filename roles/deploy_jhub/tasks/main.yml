@@ -94,12 +94,6 @@
     release_values:
       grafana:
         adminPassword: "{{ grafana_password }}"
-        service:
-          enabled: true
-          type: LoadBalancer
-          port: 3000
-          targetPort: 3000
-          portName: service
         dashboardProviders:
           dashboardproviders.yaml:
             apiVersion: 1
