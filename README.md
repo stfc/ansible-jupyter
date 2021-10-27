@@ -1,12 +1,33 @@
-Ansible JupyterHub Server for STFC Cloud
-========================================
+# Ansible JupyterHub Server with Prometheus Stacks for STFC cloud Openstacks
 
-Provides a Magnum Kubernetes cluster, with autoscaling enabled and configured,
-and a JupyterHub Service. This uses the helm chart provided by [ZeroToJupyterHub](https://github.com/jupyterhub/zero-to-jupyterhub-k8s).
+Based on the STFC Ansible JupyterHub Server for STFC cloud
+## Contents
+- [Features](#features)
+- [Limitations](#limitations)
+- [Requirements](#requirements)
+  * [Local Environment Setup](#local-environment-setup)
+  * [Recommended Setup](#recommended-setup)
+- [Deploying a cluster](#deploying-a-cluster)
+  * [Enabling GPU Workers](#enabling-gpu-workers)
+  * [Manual Cluster config fix for GPU Workers](#manual-cluster-config-fix-for-gpu-workers)
+  * [Priority Class for GPU-operator](#priority-class-for-gpu-operator)
+- [Kubectl Namespaces](#kubectl-namespaces)
+- [Jupyter Hub Config](#jupyter-hub-config)
+  * [HTTPS Config](#https-config)
+    + [Setting up DNS for Lets Encrypt](#setting-up-dns-for-lets-encrypt)
+    + [Using existing TLS Certificate](#using-existing-tls-certificate)
+  * [Using Oauth Sign in (`config-oauth.yaml.template`)](#using-oauth-sign-in---config-oauthyamltemplate--)
+    + [Setting users / admin groups for Oauth](#setting-users---admin-groups-for-oauth)
+  * [Using Native Authenticator (`config-native.yaml.template`)](#using-native-authenticator---config-nativeyamltemplate--)
+- [Deploying Jupyter hub](#deploying-jupyter-hub)
+- [SSL Setup](#ssl-setup)
+- [Note on Renewal Limits](#note-on-renewal-limits)
+- [Maintenance and Notes](#maintenance-and-notes)
+  * [Single hub instance](#single-hub-instance)
+  * [Autoscaler](#autoscaler)
+  * [Proxy_public service notes](#proxy-public-service-notes)
 
-Features
-========
-
+## Features
 - Oauth2 or Local Authentication
 - Multiple profiles for different resources limits
 - Node Autoscaling on Openstack
@@ -15,22 +36,32 @@ Features
 - Nvidia GPU Support (w/ autoscaling)
 - Cinder support (see limitations)
 - Automatic HTTPS support, can have a instan/ce up in <1 hour (with pre-requisites in place)
-- Deploy Prometheus stack to monitor the cluster
-- Deploy a pre-configured Grafana dashboard for monitoring GPU and JupyterHub
+- (New) Deploy Prometheus stack to monitor the cluster
+- (New) Deploy a pre-configured Grafana dashboard for monitoring GPU and JupyterHub
 
-Limitations
-===========
+## Limitations
 
 - Existing Cinder volumes cannot be re-attached/transferred on cluster re-creation
 - The primary worker/master flavour cannot be changed after creation
 - Cannot use placeholders for optional profiles (e.g. GPU placeholder)
 - Each node takes 10-15 minutes to spin up due to Magnum overhead, if no placeholders are available a user will have to wait this long.
+- Some metrics can't be selected by node name in Grafana dashboard as it requires a reverse DNS.
 
-
-Local Environment Setup
-=======================
-
-- Install `python3-openstackclient` and `python3-magnumclient`
+## Requirements
+- Ansible ([Installing Ansible — Ansible Documentation](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html))
+- Helm 3 ([Installing Helm](https://helm.sh/docs/intro/install/))
+- kubectl ([Install Tools | Kubernetes](https://kubernetes.io/docs/tasks/tools/))
+- Python 3
+	- Packages
+		- ansible
+		- setuptools 
+		- setuptools-rust
+		- openstacksdk 
+		- openshift
+- python3-openstackclient
+- python3-magnumclient
+- Docker (Optional for GPU image building)
+### Local Environment Setup
 - Upgrade pip3 as the default version is too old to handle the required deps: `pip3 install --upgrade`
 - Activate .venv if present then install pip deps: `pip3 install ansible setuptools setuptools-rust openstacksdk openshift`
 - Clone the repository and cd into it
@@ -40,8 +71,7 @@ Local Environment Setup
 - Insert your a password line below username with your password
 - Test using `openstack --os-cloud=jupyter-development coe cluster template list`, which will always return built-in templates
 
-Requirements
-============
+### Recommended Setup
 
 The following is assumed:
 - You are using openstack with Magnum installed
@@ -52,8 +82,9 @@ The following is assumed:
 
 It's **highly** recommended that you setup a dedicated project with a high number of volume instances; a volume is created per user so this can rapidly grow. By default each volume is only 1GB, so a sensible space quota is fine.
 
-Deploying a cluster
-===================
+
+
+## Deploying a cluster
 
 - In `playbooks/deploy_cluster.yml` check the config
 - Pay attention to `max_worker_nodes` and `flavor`, as the flavor cannot be changed after creation
@@ -66,12 +97,9 @@ Deploying a cluster
 - Check for kubectl connectivity `kubectl get nodes`
 - Check that all pods are created successfully with `kubectl get pods -n kube-system`
 
-Enabling GPU Workers
---------------------
+### Enabling GPU Workers
 - Edit `playbooks/build_gpu_driver.yml` to check the Nvidia driver and OS targetted
 - Run `ansible-playbook playbooks/build_gpu_driver.yml` to build and push the driver to the magnum mirror
-
-
 - In `playbooks/deploy_cluster.yml` check the configuration matches above and the desired outcome
 - If the cluster already exists comment out the init cluster step in `k8s_cluster/tasks_deploy_magnum_cluster`. Openstack will create a new cluster as this step is not idempotent.
 - Run `ansible-playbook playbooks/deploy_jhub.yml -i dev_inventory/openstack.yml`
@@ -79,12 +107,11 @@ Enabling GPU Workers
 - The status of the Nvidia driver on the guest can be monitored with `kubectl get all -n gpu-operator-resources`
 
 
-Manual Cluster config for GPU Workers
---------------------------------------
+### Manual Cluster config fix for GPU Workers
 The cluster autoscaler must be informed how to scale these nodes:
 - Edit the deployment with `kubectl edit deploy/cluster-autoscaler -n kube-system`
 - Find the line with `1:n:default-worker` where n is the max number of workers and 1 is the minimum number
-- Insert another line below, taking care to have 3 dashes: `- --1:n:gpu-worker` to enable scaling on GPU workers
+- Insert another line below, taking care to have 3 dashes: `-nodes --1:n:gpu-worker` to enable scaling on GPU workers
 - Save, this should enable autoscaling on GPU instances and can be monitored with `kubectl logs deploy/cluster-autoscaler -n kube-system --follow`
 
 If you are seeing errors that the annotation `csi.volume.kubernetes.io/nodeid` is missing whilst trying to start an instance on a GPU node you need to manually adjust the CSI plugin:
@@ -135,16 +162,28 @@ spec:
 
 This will now deploy `csi-cinder-nodeplugin` to all nodes regardless of taint. To verify you can check the number of desired pods, it should equal your total number of nodes in `kubectl get daemonset -n kube-system`
 
-Jupyter Hub Config
-===================
+### Priority Class for GPU-operator
+The Nvidia GPU Helm Chart will try to schedule pods with `system-node-critical` in namespaces outside of `kube-system`. Earlier version of K8s doesn't allow this. Therefore, a workaround is included with this notebook to create a high priority user PriorityClass for these pods.
+
+## Kubectl Namespaces
+
+All components are installed in the `jhub` (or user-selected) namespace and the Prometheus-stack is deployed to the `prometheus` namespace. This means every command must:
+
+- Include `-n <namespace>` on every command
+- (Preferred) use [Kubectx and kubens](https://github.com/ahmetb/kubectx) and set the namespace for this session with `kubectl ns jhub`
+
+All subsequent Kubernetes commands will omit the namespace for brevity.
+
+## Jupyter Hub Config
 
 - Ensure that the terminal Ansible will run in can access the correct cluster (`kubectl get no`).
 - Check the config in `playbooks/deploy_jhub.yml`.
-- Copy `config.yaml.template` to `config.yaml` and ensure the various secrets and fields marked:
+- Copy the content of `config.yaml.template`(in `/roles/deploy_jhub/files/`) to create a `config.yaml` in the same directory and ensure the various secrets and fields marked:
 - Go through each line checking the config values are as expected. Additional guidance is provided below:
 
-Setting up DNS for Lets Encrypt
--------------------------------
+### HTTPS Config
+
+#### Setting up DNS for Lets Encrypt
 
 Lets Encrypt is used to handle HTTPS certificates automatically. Jupyterhub can have unusual problems in HTTP mode only, so I would strongly strongly advice you run it with some level of TLS.
 
@@ -155,8 +194,7 @@ Simply ensure you have:
 
 Update the config file with the domain name, by default it's set to `jupyter.stfc.ac.uk`.
 
-Using existing TLS Certificate
-------------------------------
+#### Using existing TLS Certificate 
 
 Alternatively, if you already have an existing certificate and don't want to expose the service externally you can manually provide a certificate.
 
@@ -164,10 +202,9 @@ The primary disadvantage of this, is both remembering to renew the certificate a
 
 A Kubernetes secret is used, instructions can be found [here](https://zero-to-jupyterhub.readthedocs.io/en/latest/administrator/security.html#specify-certificate-through-secret-resource)
 
-Using Oauth Sign in
--------------------
+### Using Oauth Sign in (`config-oauth.yaml.template`)
 
-For short-term deployments, where a list of authorized users is suitable, simply use the native authenticator and see below.
+For short-term deployments, where a list of authorized users is suitable, simply use the native authenticator ( and see below.
 
 If you are using another OAuth provider please contact them for support.
 
@@ -183,8 +220,7 @@ If you are using IRIS IAM the secrets must be generated for the config file as f
 - Take note of the **registration token**, this is not used in config but you will not be able to access / modify your token afterward without it.
 - Copy `config-oauth.yaml.template` to config.yaml and populate the file with the above details.
 
-Setting users / admin groups for Oauth
---------------------------------------
+#### Setting users / admin groups for Oauth
 
 By default the config template assumes the user will be using groups with Oauth to limit access to approved groups and assign admin privileges.
 
@@ -192,8 +228,7 @@ Simply modify the `allowed_groups` and `admin_groups` contains the group names y
 
 To allow anyone who completes Oauth login access, simply remove all entries from both lists. This will also disable admin accounts too.
 
-Using Native Authenticator
---------------------------
+### Using Native Authenticator (`config-native.yaml.template`)
 
 If your service is short lived (<1 month), then an alternative is to use the Native Authenticator. This is especially useful for running events where users won't have an IAM account (e.g. school outreach).
 
@@ -213,8 +248,7 @@ To use the Native Authenticator:
 
 To authorize users after they sign up navigate to `/hub/authorize` (e.g. https://example.com/hub/authorize ). Unfortunately, there is no button to access this page so the URL must be directly changed.
 
-Deploying Jupyter hub
-=====================
+## Deploying Jupyter hub
 
 - Login to the openstack GUI before deploying, as this saves a step later...
 - Deploy the jupyterhub instance with `ansible-playbook playbooks/deploy_jhub.yml`
@@ -223,18 +257,7 @@ Deploying Jupyter hub
 - Associate your prepared FIP with matching DNS records to that whilst the load balancer is being created.
 - If Magnum managed to associate a random FIP before you disassociate and release. But this will happen as the final step of creating the load balancer if you haven't already.
 
-Kubectl Namespaces
-------------------
-
-All components are installed in the `jhub` (or user-selected) namespace. This means every command must:
-
-- Include `-n <namespace>` on every command
-- (Preferred) use [Kubectx and kubens](https://github.com/ahmetb/kubectx) and set the namespace for this session with `kubectl ns jhub`
-
-All subsequent Kubernetes commands will omit the namespace for brevity.
-
-SSL Setup
----------
+## SSL Setup
 
 The Lets Encrypt (LE) certificate will have failed to issue, as the LB takes longer to create than the first issue. To issue your first certificate and enable automatic renewal:
 
@@ -251,8 +274,7 @@ We need to force the HTTPS issuer to retry:
 - Warnings about implicit names can be ignored. If successful there will be *no* error printed after a minute.
 - Go to `https://<domain>.com` and it should be encrypted.
 
-Important - Note on Renewal Limits
-----------------------------------
+## Note on Renewal Limits
 
 A maximum of 5 certificates will be issued to a set of domain names per week (on a 7 day rolling basis). Updating a deployment does not count towards this as Kubernetes holds the TLS secret. 
 
@@ -261,20 +283,17 @@ However, `helm uninstall jhub` will delete the certificate counting towards anot
 The currently issued certificate(s) can be viewed at: https://crt.sh/
 
 
-Maintenance and Notes
-=====================
+## Maintenance and Notes
 
 If your are maintaining the service there are a couple of important things to note:
 
-Single hub instance
--------------------
+### Single hub instance
 
 Jupyterhub is not designed for high availability, this means only a single pod can ever exist. Any upgrades or modifications to the service will incur a user downtime of a few minutes.
 
 Any existing Pods containing user work will not be shutdown or restarted unless the profiles have changed. To be clear, hub redeploying will have a minor outage but without clearing existing work.
 
-Autoscaler
------------
+### Autoscaler
 
 The autoscaler is the most "brittle" part of the deployment as it has to work with heat. The logs can be monitored with:
 
@@ -286,8 +305,7 @@ The maximum number of nodes can be changed with:
 - Under image arguments the max number of instances can be changed
 - Saving the file will redeploy the auto scaler with the new settings immediately.
 
-Proxy_public service notes
---------------------------
+### Proxy_public service notes
 
 Deleting the public service endpoint does not delete the load balancer associated. **You must delete the load balancer** to prevent problems, as any redeployment of the service uses the existing LB without updating the members inside. This will cause the failover to stop working as well.
 
