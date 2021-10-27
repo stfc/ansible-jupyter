@@ -12,10 +12,6 @@
     kind: Namespace
     state: present
 
-- name: create ssl cert (only in test)
-  command:
-    kubectl create secret tls example-tls --key="{{ role_path }}/files/example.key" --cert="{{ role_path }}/files/example.crt" --namespace="{{ jhub_namespace }}"
-
 - name: Install jhub helm repo
   kubernetes.core.helm_repository:
     name: jupyterhub
@@ -94,6 +90,12 @@
     release_values:
       grafana:
         adminPassword: "{{ grafana_password }}"
+        service:
+          enabled: true
+          type: LoadBalancer
+          port: 3000
+          targetPort: 3000
+          portName: service
         dashboardProviders:
           dashboardproviders.yaml:
             apiVersion: 1
