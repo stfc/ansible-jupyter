@@ -1,3 +1,4 @@
+
 # Ansible JupyterHub Server with Prometheus Stacks for STFC cloud Openstacks
 
 Based on the STFC Ansible JupyterHub Server for STFC cloud
@@ -26,6 +27,7 @@ Based on the STFC Ansible JupyterHub Server for STFC cloud
   * [Single hub instance](#single-hub-instance)
   * [Autoscaler](#autoscaler)
   * [Proxy_public service notes](#proxy-public-service-notes)
+  * [Prometheus Stack](#prometheus-stack)
 
 ## Features
 - Oauth2 or Local Authentication
@@ -318,3 +320,10 @@ To fix this:
 - Delete the service in Kubernetes and load balancer in openstack
 - Re-run the ansible deployment script (see deploy Jupyterhub), this will recreate the service.
 - Associate the desired floating IP as described above
+
+## Prometheus Stack
+The Prometheus-Grafana stack is deployed automatically when deploying JupyterHub. user can set password using the `grafana_password` variable.
+
+The service monitors are pre-configured to monitor the Kubernetes cluster, JupyterHub and GPU-Operator.
+
+The default dashboard is located in the STFC folder which contains a comprehensive set of information.
