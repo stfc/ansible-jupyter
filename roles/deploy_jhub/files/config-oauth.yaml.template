@@ -39,6 +39,12 @@ singleuser:
   memory:
     limit: 1.8G
     guarantee: 1.8G
+  #Uncomment this to grant sudo right to users (only works with images from jupyter/docker-stacks)
+  # extraEnv:
+  #   GRANT_SUDO:
+  #     "yes"
+  # uid: 0
+  # cmd: null
 
   profileList:
     - display_name: "Default: Normal Size"
