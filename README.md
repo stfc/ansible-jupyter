@@ -21,15 +21,20 @@ Based on the STFC Ansible JupyterHub Server for STFC cloud
     + [Setting users / admin groups for Oauth](#setting-users---admin-groups-for-oauth)
   * [Using Native Authenticator (`config-native.yaml.template`)](#using-native-authenticator---config-nativeyamltemplate--)
 - [Deploying Jupyter hub](#deploying-jupyter-hub)
-- [SSL Setup](#ssl-setup)
-- [Note on Renewal Limits](#note-on-renewal-limits)
+  * [SSL Setup](#ssl-setup)
+  * [Note on Renewal Limits](#note-on-renewal-limits)
+- [Prometheus Stack](#prometheus-stack)
+- [Virtual Desktop](#virtual-desktop)
 - [Maintenance and Notes](#maintenance-and-notes)
   * [Single hub instance](#single-hub-instance)
   * [Autoscaler](#autoscaler)
   * [Proxy_public service notes](#proxy-public-service-notes)
-  * [Prometheus Stack](#prometheus-stack)
 
 ## Features
+- **(New) Deploy Prometheus stack to monitor the cluster**
+- **(New) Deploy a pre-configured Grafana dashboard for monitoring GPU and JupyterHub**
+- **(New) Deploy Virtual Desktop environment**
+- **(New) Allow GPU worker for lower Kubernetes version**
 - Oauth2 or Local Authentication
 - Multiple profiles for different resources limits
 - Node Autoscaling on Openstack
@@ -38,8 +43,6 @@ Based on the STFC Ansible JupyterHub Server for STFC cloud
 - Nvidia GPU Support (w/ autoscaling)
 - Cinder support (see limitations)
 - Automatic HTTPS support, can have a instan/ce up in <1 hour (with pre-requisites in place)
-- (New) Deploy Prometheus stack to monitor the cluster
-- (New) Deploy a pre-configured Grafana dashboard for monitoring GPU and JupyterHub
 
 ## Limitations
 
@@ -91,7 +94,7 @@ It's **highly** recommended that you setup a dedicated project with a high numbe
 - In `playbooks/deploy_cluster.yml` check the config
 - Pay attention to `max_worker_nodes` and `flavor`, as the flavor cannot be changed after creation
 - This will also optionally setup a load balancer called `<cluster_name>_in` with SSH access on the users behalf if enabled
-- Deploy with `ansible-playbook -i <name_of_inventory> playbooks/deploy_cluster`
+- Deploy with `ansible-playbook -i <name_of_inventory> playbooks/deploy_cluster.yml`
 - For example, to deploy to a development project `ansible-playbook -i dev_inventory/openstack.yml playbooks/deploy_cluster`
 - The status of the cluster deployment can be monitored with `watch openstack coe cluster list` or on the web GUI
 - One deployed pull the config to your local machine with `openstack coe cluster config <cluster_name>`. This will copy a `config` file into your current directory
@@ -259,7 +262,7 @@ To authorize users after they sign up navigate to `/hub/authorize` (e.g. https:/
 - Associate your prepared FIP with matching DNS records to that whilst the load balancer is being created.
 - If Magnum managed to associate a random FIP before you disassociate and release. But this will happen as the final step of creating the load balancer if you haven't already.
 
-## SSL Setup
+### SSL Setup
 
 The Lets Encrypt (LE) certificate will have failed to issue, as the LB takes longer to create than the first issue. To issue your first certificate and enable automatic renewal:
 
@@ -276,13 +279,52 @@ We need to force the HTTPS issuer to retry:
 - Warnings about implicit names can be ignored. If successful there will be *no* error printed after a minute.
 - Go to `https://<domain>.com` and it should be encrypted.
 
-## Note on Renewal Limits
+### Note on Renewal Limits
 
 A maximum of 5 certificates will be issued to a set of domain names per week (on a 7 day rolling basis). Updating a deployment does not count towards this as Kubernetes holds the TLS secret. 
 
 However, `helm uninstall jhub` will delete the certificate counting towards another when redeployed.
 
 The currently issued certificate(s) can be viewed at: https://crt.sh/
+
+## Prometheus Stack
+The Prometheus-Grafana stack is deployed automatically when deploying JupyterHub. user can set password using the `grafana_password` variable.
+
+The service monitors are pre-configured to monitor the Kubernetes cluster, JupyterHub and GPU-Operator.
+
+The default dashboard is located in the STFC folder which contains a comprehensive set of information.
+
+## Virtual Desktop
+In `/role/deploy_jhub/files/config.yaml` uncomment the part in profile list
+```yaml
+singleuser:
+	...
+  profilelist:
+  	...
+    # - display_name: "VDI-testing"
+    #   description: |
+    #     Deploy image with vitual desktop 4 CPUs, 4GB RAM
+    #   kubespawner_override:
+    #     image: harbor.stfc.ac.uk/stfc-cloud/jupyterhub-vdi-proxy:latest
+    #     cpu_limit: 4
+    #     cpu_guarantee: 0.05
+    #     mem_limit: "4G"
+    #     mem_guarantee: "4G"
+    #     extra_resource_limits: {}
+```
+
+
+If you want to enable sudoer for users you can uncomment this block as well
+
+```yaml
+singleuser:
+	...
+  # extraEnv:
+  #   GRANT_SUDO:
+  #     "yes"
+  # uid: 0
+  # cmd: null
+```
 
 
 ## Maintenance and Notes
@@ -321,9 +363,3 @@ To fix this:
 - Re-run the ansible deployment script (see deploy Jupyterhub), this will recreate the service.
 - Associate the desired floating IP as described above
 
-## Prometheus Stack
-The Prometheus-Grafana stack is deployed automatically when deploying JupyterHub. user can set password using the `grafana_password` variable.
-
-The service monitors are pre-configured to monitor the Kubernetes cluster, JupyterHub and GPU-Operator.
-
-The default dashboard is located in the STFC folder which contains a comprehensive set of information.
