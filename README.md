@@ -127,7 +127,7 @@ CSI plugins will not deploy on tainted nodes (e.g. GPU instances) preventing us 
 - Run `kubectl edit daemonset/csi-cinder-nodeplugin -n kube-system`
 - Scroll down to the configuration for `csi-cinder-nodeplugin` it will look something like this:
 
-```
+```yaml
   name: csi-cinder-nodeplugin
   namespace: kube-system
   resourceVersion: "5800"
@@ -150,7 +150,7 @@ spec:
 
 - Add the [following changes](https://github.com/kubernetes/cloud-provider-openstack/pull/1276/files#diff-c8af329d87fa66e42453db753cc7f9c7c25812d91c5276a55b9d4e1399a1b009R19) so that is now looks like:
 
-```
+```yaml
 spec:
   revisionHistoryLimit: 10
   selector:
