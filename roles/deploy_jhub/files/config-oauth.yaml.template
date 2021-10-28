@@ -55,6 +55,16 @@ singleuser:
         mem_limit: "7.5G"
         mem_guarantee: "7.5G"
         extra_resource_limits: {}
+    # - display_name: "VDI-testing"
+    #   description: |
+    #     Deploy image with vitual desktop 4 CPUs, 4GB RAM
+    #   kubespawner_override:
+    #     image: harbor.stfc.ac.uk/stfc-cloud/jupyterhub-vdi-proxy:latest
+    #     cpu_limit: 4
+    #     cpu_guarantee: 0.05
+    #     mem_limit: "4G"
+    #     mem_guarantee: "4G"
+    #     extra_resource_limits: {}
     # - display_name: "GPU"
     #   description: |
     #     This configuration gives you 2 CPUs, 3GB of RAM, and a GPU
