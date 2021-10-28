@@ -21,13 +21,14 @@ Based on the STFC Ansible JupyterHub Server for STFC cloud
     + [Setting users / admin groups for Oauth](#setting-users---admin-groups-for-oauth)
   * [Using Native Authenticator (`config-native.yaml.template`)](#using-native-authenticator---config-nativeyamltemplate--)
 - [Deploying Jupyter hub](#deploying-jupyter-hub)
-- [SSL Setup](#ssl-setup)
-- [Note on Renewal Limits](#note-on-renewal-limits)
+  * [SSL Setup](#ssl-setup)
+  * [Note on Renewal Limits](#note-on-renewal-limits)
+- [Prometheus Stack](#prometheus-stack)
+- [Virtual Desktop](#virtual-desktop)
 - [Maintenance and Notes](#maintenance-and-notes)
   * [Single hub instance](#single-hub-instance)
   * [Autoscaler](#autoscaler)
   * [Proxy_public service notes](#proxy-public-service-notes)
-  * [Prometheus Stack](#prometheus-stack)
 
 ## Features
 - **(New) Deploy Prometheus stack to monitor the cluster**
@@ -261,7 +262,7 @@ To authorize users after they sign up navigate to `/hub/authorize` (e.g. https:/
 - Associate your prepared FIP with matching DNS records to that whilst the load balancer is being created.
 - If Magnum managed to associate a random FIP before you disassociate and release. But this will happen as the final step of creating the load balancer if you haven't already.
 
-## SSL Setup
+### SSL Setup
 
 The Lets Encrypt (LE) certificate will have failed to issue, as the LB takes longer to create than the first issue. To issue your first certificate and enable automatic renewal:
 
@@ -278,50 +279,13 @@ We need to force the HTTPS issuer to retry:
 - Warnings about implicit names can be ignored. If successful there will be *no* error printed after a minute.
 - Go to `https://<domain>.com` and it should be encrypted.
 
-## Note on Renewal Limits
+### Note on Renewal Limits
 
 A maximum of 5 certificates will be issued to a set of domain names per week (on a 7 day rolling basis). Updating a deployment does not count towards this as Kubernetes holds the TLS secret. 
 
 However, `helm uninstall jhub` will delete the certificate counting towards another when redeployed.
 
 The currently issued certificate(s) can be viewed at: https://crt.sh/
-
-
-## Maintenance and Notes
-
-If your are maintaining the service there are a couple of important things to note:
-
-### Single hub instance
-
-Jupyterhub is not designed for high availability, this means only a single pod can ever exist. Any upgrades or modifications to the service will incur a user downtime of a few minutes.
-
-Any existing Pods containing user work will not be shutdown or restarted unless the profiles have changed. To be clear, hub redeploying will have a minor outage but without clearing existing work.
-
-### Autoscaler
-
-The autoscaler is the most "brittle" part of the deployment as it has to work with heat. The logs can be monitored with:
-
-- `kubectl logs deployment/cluster-autoscaler --follow -n kube-system`
-
-The maximum number of nodes can be changed with:
-
-- `kubectl edit deployment/cluster-autoscaler -n kube-system`
-- Under image arguments the max number of instances can be changed
-- Saving the file will redeploy the auto scaler with the new settings immediately.
-
-### Proxy_public service notes
-
-Deleting the public service endpoint does not delete the load balancer associated. **You must delete the load balancer** to prevent problems, as any redeployment of the service uses the existing LB without updating the members inside. This will cause the failover to stop working as well.
-
-The following symptoms of this happening are:
-- `kubectl get all -n kube-system` shows everything but the external service as completed
-- The external service will be pending, but on the openstack GUI the LB will be active (not updating / creating)
-- The service is not accessible as the old pod is still referred to.
-
-To fix this:
-- Delete the service in Kubernetes and load balancer in openstack
-- Re-run the ansible deployment script (see deploy Jupyterhub), this will recreate the service.
-- Associate the desired floating IP as described above
 
 ## Prometheus Stack
 The Prometheus-Grafana stack is deployed automatically when deploying JupyterHub. user can set password using the `grafana_password` variable.
@@ -361,3 +325,41 @@ singleuser:
   # uid: 0
   # cmd: null
 ```
+
+
+## Maintenance and Notes
+
+If your are maintaining the service there are a couple of important things to note:
+
+### Single hub instance
+
+Jupyterhub is not designed for high availability, this means only a single pod can ever exist. Any upgrades or modifications to the service will incur a user downtime of a few minutes.
+
+Any existing Pods containing user work will not be shutdown or restarted unless the profiles have changed. To be clear, hub redeploying will have a minor outage but without clearing existing work.
+
+### Autoscaler
+
+The autoscaler is the most "brittle" part of the deployment as it has to work with heat. The logs can be monitored with:
+
+- `kubectl logs deployment/cluster-autoscaler --follow -n kube-system`
+
+The maximum number of nodes can be changed with:
+
+- `kubectl edit deployment/cluster-autoscaler -n kube-system`
+- Under image arguments the max number of instances can be changed
+- Saving the file will redeploy the auto scaler with the new settings immediately.
+
+### Proxy_public service notes
+
+Deleting the public service endpoint does not delete the load balancer associated. **You must delete the load balancer** to prevent problems, as any redeployment of the service uses the existing LB without updating the members inside. This will cause the failover to stop working as well.
+
+The following symptoms of this happening are:
+- `kubectl get all -n kube-system` shows everything but the external service as completed
+- The external service will be pending, but on the openstack GUI the LB will be active (not updating / creating)
+- The service is not accessible as the old pod is still referred to.
+
+To fix this:
+- Delete the service in Kubernetes and load balancer in openstack
+- Re-run the ansible deployment script (see deploy Jupyterhub), this will recreate the service.
+- Associate the desired floating IP as described above
+
