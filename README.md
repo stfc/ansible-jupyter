@@ -332,6 +332,25 @@ The default dashboard is located in the STFC folder which contains a comprehensi
 
 ## Virtual Desktop
 In `/role/deploy_jhub/files/config.yaml` uncomment the part in profile list
+```yaml
+singleuser:
+	...
+  profilelist:
+  	...
+    # - display_name: "VDI-testing"
+    #   description: |
+    #     Deploy image with vitual desktop 4 CPUs, 4GB RAM
+    #   kubespawner_override:
+    #     image: harbor.stfc.ac.uk/stfc-cloud/jupyterhub-vdi-proxy:latest
+    #     cpu_limit: 4
+    #     cpu_guarantee: 0.05
+    #     mem_limit: "4G"
+    #     mem_guarantee: "4G"
+    #     extra_resource_limits: {}
+```
+
+
+If you want to enable sudoer for users you can uncomment this block as well
 
 ```yaml
 singleuser:
@@ -342,5 +361,3 @@ singleuser:
   # uid: 0
   # cmd: null
 ```
-
-If you want to enable sudoer for users you can uncomment this block as well
