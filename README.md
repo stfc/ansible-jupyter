@@ -30,6 +30,10 @@ Based on the STFC Ansible JupyterHub Server for STFC cloud
   * [Prometheus Stack](#prometheus-stack)
 
 ## Features
+- **(New) Deploy Prometheus stack to monitor the cluster**
+- **(New) Deploy a pre-configured Grafana dashboard for monitoring GPU and JupyterHub**
+- **(New) Deploy Virtual Desktop environment**
+- **(New) Allow GPU worker for lower Kubernetes version**
 - Oauth2 or Local Authentication
 - Multiple profiles for different resources limits
 - Node Autoscaling on Openstack
@@ -38,8 +42,6 @@ Based on the STFC Ansible JupyterHub Server for STFC cloud
 - Nvidia GPU Support (w/ autoscaling)
 - Cinder support (see limitations)
 - Automatic HTTPS support, can have a instan/ce up in <1 hour (with pre-requisites in place)
-- (New) Deploy Prometheus stack to monitor the cluster
-- (New) Deploy a pre-configured Grafana dashboard for monitoring GPU and JupyterHub
 
 ## Limitations
 
@@ -91,7 +93,7 @@ It's **highly** recommended that you setup a dedicated project with a high numbe
 - In `playbooks/deploy_cluster.yml` check the config
 - Pay attention to `max_worker_nodes` and `flavor`, as the flavor cannot be changed after creation
 - This will also optionally setup a load balancer called `<cluster_name>_in` with SSH access on the users behalf if enabled
-- Deploy with `ansible-playbook -i <name_of_inventory> playbooks/deploy_cluster`
+- Deploy with `ansible-playbook -i <name_of_inventory> playbooks/deploy_cluster.yml`
 - For example, to deploy to a development project `ansible-playbook -i dev_inventory/openstack.yml playbooks/deploy_cluster`
 - The status of the cluster deployment can be monitored with `watch openstack coe cluster list` or on the web GUI
 - One deployed pull the config to your local machine with `openstack coe cluster config <cluster_name>`. This will copy a `config` file into your current directory
@@ -327,3 +329,18 @@ The Prometheus-Grafana stack is deployed automatically when deploying JupyterHub
 The service monitors are pre-configured to monitor the Kubernetes cluster, JupyterHub and GPU-Operator.
 
 The default dashboard is located in the STFC folder which contains a comprehensive set of information.
+
+## Virtual Desktop
+In `/role/deploy_jhub/files/config.yaml` uncomment the part in profile list
+
+```yaml
+singleuser:
+	...
+  # extraEnv:
+  #   GRANT_SUDO:
+  #     "yes"
+  # uid: 0
+  # cmd: null
+```
+
+If you want to enable sudoer for users you can uncomment this block as well
