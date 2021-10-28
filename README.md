@@ -25,6 +25,7 @@ Based on the STFC Ansible JupyterHub Server for STFC cloud
   * [Note on Renewal Limits](#note-on-renewal-limits)
 - [Prometheus Stack](#prometheus-stack)
 - [Virtual Desktop](#virtual-desktop)
+  * [Enabling sudo for user](#enabling-sudo-for-user)
 - [Maintenance and Notes](#maintenance-and-notes)
   * [Single hub instance](#single-hub-instance)
   * [Autoscaler](#autoscaler)
@@ -313,7 +314,7 @@ singleuser:
     #     extra_resource_limits: {}
 ```
 
-
+### Enabling sudo for user
 If you want to enable sudoer for users you can uncomment this block as well
 
 ```yaml
