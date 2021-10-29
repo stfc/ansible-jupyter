@@ -5,15 +5,14 @@
   vars:
     # Persistant Volume Claim
     ## config file for storage class (Check with your cloud provider)  
-    # (cinder-storage) , (cinder-kube-storage.yaml)
     ## you can also change the name of storage class in config.yaml in /role/deplyo_jhub/files/{{ your_jhub_config_file }}
     #
     # singleuser: 
     #   storage: 
     #     dynamic: 
     #       Storage Class: {{ name }}
-    storage_class_name: "local-path"
-    storage_class_file: "local-path.yaml"
+    storage_class_name: "cinder-storage"
+    storage_class_file: "cinder-kube-storage.yaml"
 
     # Helm name of the service
     jhub_deployed_name: jupyterhub
