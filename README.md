@@ -326,10 +326,11 @@ The currently issued certificate(s) can be viewed at: https://crt.sh/
 
 ## Prometheus Stack
 The Prometheus-Grafana stack is deployed automatically when deploying JupyterHub. user can set password using the `grafana_password` variable.
-
 The service monitors are pre-configured to monitor the Kubernetes cluster, JupyterHub and GPU-Operator.
-
 The default dashboard is located in the STFC folder which contains a comprehensive set of information.
+
+### Accessing Grafana and Prometheus dashboard
+User `kubectl get service -A` to check the IP of grafana and prometheus.
 
 ## Virtual Desktop
 In `/role/deploy_jhub/files/config.yaml` uncomment the part in profile list. 
