@@ -1,0 +1,82 @@
+- name: Install prometheus helm repo
+  kubernetes.core.helm_repository:
+    name: prometheus-community
+    repo_url: https://prometheus-community.github.io/helm-charts
+
+- name: Create the prometheus namespace
+  kubernetes.core.k8s:
+    name: "{{ prometheus_namespace }}"
+    kind: Namespace
+    state: present
+
+- name: Install pre-set version of prometheus
+  kubernetes.core.helm:
+    chart_ref: prometheus-community/kube-prometheus-stack
+    create_namespace: yes
+    update_repo_cache: yes
+    # Pulled from default
+    name: "{{ prometheus_deployed_name }}"
+    release_namespace: "{{ prometheus_namespace }}"
+    release_values:
+      grafana:
+        adminPassword: "{{ grafana_password }}"
+        service:
+          enabled: true
+          type: LoadBalancer
+          port: 3000
+          targetPort: 3000
+          portName: service
+        dashboardProviders:
+          dashboardproviders.yaml:
+            apiVersion: 1
+            providers:
+            - name: 'stfc'
+              orgId: 1
+              folder: 'stfc'
+              type: file
+              disableDeletion: false
+              allowUiUpdates: true
+              options:
+                path: /var/lib/grafana/dashboards/stfc
+
+        ## Configure grafana dashboard to import
+        ## NOTE: To use dashboards you must also enable/configure dashboardProviders
+        ## ref: https://grafana.com/dashboards
+        ##
+        ## dashboards per provider, use provider name as key.
+        ##
+        dashboards:
+          stfc:
+            local-dashboard:
+              url: https://raw.githubusercontent.com/Donald954732/Kubernetes-GPU-JupyterHub-Dashboard/main/dashboard.json       
+              datasource: Prometheus   
+      ## Deploy a Prometheus instance
+      ##
+      prometheus:
+        #set up externeal access for prometheus portal
+        service:
+          port: 9090
+          targetPort: 9090
+          type: LoadBalancer   
+        prometheusSpec:
+          serviceMonitorSelectorNilUsesHelmValues: false
+        additionalServiceMonitors:
+        # Name of the ServiceMonitor to create
+        # for jupyterhub_metrics
+        - name: "{{ jhub_deployed_name }}-https-service"
+          namespaceSelector:
+            matchNames:
+            - "{{ jhub_namespace }}"
+          selector:
+            matchLabels:
+              component: proxy-public
+          endpoints:
+          - targetPort: https
+            path: /hub/metrics
+            scheme: https
+            #can be disabled. This is for developemnt where a self signed ssl cert is used
+            tlsConfig:
+              insecureSkipVerify: true 
+    values_files:
+      #the gpu metric scrapper have incompetable syntax and so should be placed in a separate file
+      - "{{ role_path }}/files/prom_config.yaml"

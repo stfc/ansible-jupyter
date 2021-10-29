@@ -1,5 +1,0 @@
-# Advanced settings which shouldn't need changing
-
-# !NOTE! : only config.yaml is in .gitignore, if you change this be sure not to commit your config by accident
-jhub_config_file: "config.yaml"
-jhub_storage_file_config: "cinder-kube-storage.yaml"

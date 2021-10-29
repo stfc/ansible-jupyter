@@ -1,13 +1,28 @@
 - hosts: localhost # Kubectl is configured from this machine
   roles:
     - deploy_jhub
+    - deploy_prometheus_stack
   vars:
+    # Persistant Volume Claim
+    ## config file for storage class (Check with your cloud provider)  
+    # (cinder-storage) , (cinder-kube-storage.yaml)
+    ## you can also change the name of storage class in config.yaml in /role/deplyo_jhub/files/{{ your_jhub_config_file }}
+    #
+    # singleuser: 
+    #   storage: 
+    #     dynamic: 
+    #       Storage Class: {{ name }}
+    storage_class_name: "local-path"
+    storage_class_file: "local-path.yaml"
+
     # Helm name of the service
     jhub_deployed_name: jupyterhub
     # K8s namespace
     jhub_namespace: jupyterhub
-    # Helm chart version for Jhub
+    # Helm chart version for Jhub (newer version may require newer kubernetes version >=1.17)
     jhub_version: "0.11.1"
+    # config file for JupyterHub helm chart (in "/roles/deploy_jhub/files")
+    jhub_config_file: "config.yaml"
 
     # Helm name of the prometheus service
     prometheus_deployed_name: prometheus

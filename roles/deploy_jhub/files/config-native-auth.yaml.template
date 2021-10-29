@@ -28,8 +28,6 @@ singleuser:
 
     type: dynamic
     capacity: 1Gi # 1GB is the minimum Cinder will serve
-    dynamic:
-      storageClass: cinder-storage
 
   # Default profile, this is what the placeholders will use
   startTimeout: 1800 # seconds == 30 minutes

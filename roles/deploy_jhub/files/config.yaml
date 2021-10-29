@@ -1,0 +1,124 @@
+# Copy this file to config.yaml and fill everything <TO_FILL>
+proxy:
+  https:
+    enabled: true
+    type: secret
+    secret:
+      name: example-tls
+    hosts:
+      - 172.18.255.200
+  # This can be generated with `openssl rand -hex 32`
+  secretToken: ddb08f5a0343103b314aeb8d9e792add0dfdbc23bec7c4694c2c27df9cb0f801
+
+singleuser:
+  # Use new UI by default as the old UI is being deprecated
+  defaultUrl: "/lab"
+
+  storage:
+    # Required for PyTorch
+    extraVolumes:
+      - name: shm-volume
+        emptyDir:
+          medium: Memory
+    extraVolumeMounts:
+      - name: shm-volume
+        mountPath: /dev/shm
+
+    type: dynamic
+    capacity: 1Gi # 1GB is the minimum Cinder will serve
+
+  # Default profile, this is what the placeholders will use
+  startTimeout: 1800 # seconds == 30 minutes
+  cpu:
+    limit: 2
+    guarantee: 0.05
+  memory:
+    limit: 1.8G
+    guarantee: 1.8G
+  #Uncomment this to grant sudo right to users (only works with images from jupyter/docker-stacks)
+  # extraEnv:
+  #   GRANT_SUDO:
+  #     "yes"
+  # uid: 0
+  # cmd: null
+
+
+  profileList:
+    - display_name: "Default: Normal Size"
+      description: |
+        For small jobs and prototyping: 2 CPUs, 1.5GB RAM and no GPU. This is the default, and will usually start in ~2 minutes. During periods of high-contention it may take up to 20 minutes to create.
+      default: True
+    - display_name: "Large Memory Instance"
+      description: |
+        For larger jobs. 8 CPUs, 7.5GB RAM and no GPU. This may
+        take up to 20 minutes to create.
+      kubespawner_override:
+        cpu_limit: 8
+        cpu_guarantee: 0.05
+        mem_limit: "7.5G"
+        mem_guarantee: "7.5G"
+        extra_resource_limits: {}
+    - display_name: "VDI-testing"
+      description: |
+        Deploy image with vitual desktop 4 CPUs, 4GB RAM
+      kubespawner_override:
+        image: harbor.stfc.ac.uk/stfc-cloud/jupyterhub-vdi-proxy:latest
+        cpu_limit: 4
+        cpu_guarantee: 0.05
+        mem_limit: "4G"
+        mem_guarantee: "4G"
+        extra_resource_limits: {}
+        extraEnv:
+          GRANT_SUDO:
+              "yes"
+        uid: 0
+        cmd: null
+    # - display_name: "GPU"
+    #   description: |
+    #     This configuration gives you 2 CPUs, 3GB of RAM, and a GPU
+    #   image: consideratio/singleuser-gpu:v0.3.0
+    #   kubespawner_override:
+    #     cpu_limit: 2
+    #     cpu_guarantee: 0.05
+    #     mem_limit: "3G"
+    #     mem_guarantee: "3G"
+    #     tolerations:
+    #       - key: nvidia.com/gpu
+    #         operator: Equal
+    #         value: "present"
+    #         effect: NoSchedule
+    #     extra_resource_limits:
+    #       nvidia.com/gpu: "1"
+
+hub:
+  config:
+    Authenticator:
+      admin_users:
+        - someAdminUser1
+        - someAdminUser2
+      check_common_password: true
+      # allowed_users:
+      # Uncomment allowed_users and insert the list of user names allowed to sign-up using the same format as above, if required.
+    JupyterHub:
+      authenticator_class: nativeauthenticator.NativeAuthenticator
+  #remove login for metrics collection
+  authenticatePrometheus: false
+
+scheduling:
+  # Try to pack users tightly rather than spinning up one node per user
+  userScheduler:
+    enabled: true
+  # Enable us to evict a placeholder rather than spin up a whole new node
+  podPriority:
+    enabled: true
+    defaultPriority: 0
+    userPlaceholderPriority: -10 # -10 is equal to scale up criteria
+  # Prep some environments beforehand so users don't have to wait
+  userPlaceholder:
+    enabled: true
+    replicas: 4 # Number of placeholders, this should eq high mem / default mem
+
+cull:
+  enabled: true
+  timeout: 86400 # seconds == 1 day
+  every: 300 # 5 minutes
