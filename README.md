@@ -25,7 +25,7 @@ Based on the STFC Ansible JupyterHub Server for STFC cloud
   * [Note on Renewal Limits](#note-on-renewal-limits)
 - [Prometheus Stack](#prometheus-stack)
 - [Virtual Desktop](#virtual-desktop)
-  * [Enabling sudo for user](#enabling-sudo-for-user)
+- [Enabling sudo for user](#enabling-sudo-for-user)
 - [Maintenance and Notes](#maintenance-and-notes)
   * [Single hub instance](#single-hub-instance)
   * [Autoscaler](#autoscaler)
@@ -296,7 +296,7 @@ The service monitors are pre-configured to monitor the Kubernetes cluster, Jupyt
 The default dashboard is located in the STFC folder which contains a comprehensive set of information.
 
 ## Virtual Desktop
-In `/role/deploy_jhub/files/config.yaml` uncomment the part in profile list
+In `/role/deploy_jhub/files/config.yaml` uncomment the part in profile list. 
 ```yaml
 singleuser:
 	...
@@ -314,9 +314,9 @@ singleuser:
     #     extra_resource_limits: {}
 ```
 
-### Enabling sudo for user
-If you want to enable sudoer for users you can uncomment this block as well
-
+## Enabling sudo for user
+If you want to enable sudoer for users you can uncomment this block as well. However, this 
+would only work for images originated from [jupyter/docker-stack](https://github.com/jupyter/docker-stacks) and allow sudoer for all images.
 ```yaml
 singleuser:
 	...
