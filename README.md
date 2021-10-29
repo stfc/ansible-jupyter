@@ -92,6 +92,21 @@ It's **highly** recommended that you setup a dedicated project with a high numbe
 
 ## Deploying a cluster
 
+### Variables (`/playbooks/deploy_cluster.yml`)
+| Variable | Description | Defalut |
+| --------- | ---------- | ---------|
+| `release_version` and `cluster_name` | Combine to form cluster name | `"1-2"` and `"jupyter-{{ release_version }}"` |
+| `num_masters` | Number of master nodes. | `2` |
+| `num_workers` | Minimum number of worker nodes. | `1` |
+| `max_worker_nodes` | Maximum number of worker nodes. | `10` |
+| `max_gpu_nodes` | Maximum number of GPU nodes. THe minimum number of GPU worker is always 1  | `4` |
+| `keypair_name` | Name for IMA keypair for managing this cluster. | `2` |
+| `master_flavor` | Flavor of master nodes | `2` |
+| `worker_flavor` | Flavor of worker nodes | `2` |
+| `setup_lb_to_master_nodes` | Set-up a lobalancer for SSH accessto master nodes | `false` |
+| `mirror_url` | mirror for docker container | `harbor.stfc.ac.uk/magnum_mirror/` |
+### Instruction
+
 - In `playbooks/deploy_cluster.yml` check the config
 - Pay attention to `max_worker_nodes` and `flavor`, as the flavor cannot be changed after creation
 - This will also optionally setup a load balancer called `<cluster_name>_in` with SSH access on the users behalf if enabled
