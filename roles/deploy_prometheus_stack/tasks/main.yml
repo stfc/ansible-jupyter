@@ -48,7 +48,7 @@
         dashboards:
           stfc:
             local-dashboard:
-              url: https://raw.githubusercontent.com/Donald954732/Kubernetes-GPU-JupyterHub-Dashboard/main/dashboard.json       
+              url: https://raw.githubusercontent.com/stfc/Kubernetes-GPU-Jupyterhub-Dashboard/main/dashboard.json       
               datasource: Prometheus   
       ## Deploy a Prometheus instance
       ##
