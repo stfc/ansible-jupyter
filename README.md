@@ -9,6 +9,10 @@ Based on the STFC Ansible JupyterHub Server for STFC cloud
   * [Local Environment Setup](#local-environment-setup)
   * [Recommended Setup](#recommended-setup)
 - [Deploying a cluster](#deploying-a-cluster)
+  * [Variables (`/playbooks/deploy_cluster.yml`)](#variables----playbooks-deploy-clusteryml--)
+  * [Instruction](#instruction)
+- [GPU](#gpu)
+  * [Variables (`/playbooks/build_gpu_driver.yml`)](#variables----playbooks-build-gpu-driveryml--)
   * [Enabling GPU Workers](#enabling-gpu-workers)
   * [Manual Cluster config fix for GPU Workers](#manual-cluster-config-fix-for-gpu-workers)
   * [Priority Class for GPU-operator](#priority-class-for-gpu-operator)
@@ -21,9 +25,12 @@ Based on the STFC Ansible JupyterHub Server for STFC cloud
     + [Setting users / admin groups for Oauth](#setting-users---admin-groups-for-oauth)
   * [Using Native Authenticator (`config-native.yaml.template`)](#using-native-authenticator---config-nativeyamltemplate--)
 - [Deploying Jupyter hub](#deploying-jupyter-hub)
+  * [Variables (`/playbooks/deploy_jhub.yml`)](#variables----playbooks-deploy-jhubyml--)
+  * [Instructions](#instructions)
   * [SSL Setup](#ssl-setup)
   * [Note on Renewal Limits](#note-on-renewal-limits)
 - [Prometheus Stack](#prometheus-stack)
+  * [Accessing Grafana and Prometheus dashboard](#accessing-grafana-and-prometheus-dashboard)
 - [Virtual Desktop](#virtual-desktop)
 - [Enabling sudo for user](#enabling-sudo-for-user)
 - [Maintenance and Notes](#maintenance-and-notes)
@@ -92,6 +99,21 @@ It's **highly** recommended that you setup a dedicated project with a high numbe
 
 ## Deploying a cluster
 
+### Variables (`/playbooks/deploy_cluster.yml`)
+| Variable | Description | Defalut |
+| --------- | ---------- | ---------|
+| `release_version` and `cluster_name` | Combine to form cluster name | `"1-2"` and `"jupyter-{{ release_version }}"` |
+| `num_masters` | Number of master nodes. | `2` |
+| `num_workers` | Minimum number of worker nodes. | `1` |
+| `max_worker_nodes` | Maximum number of worker nodes. | `10` |
+| `max_gpu_nodes` | Maximum number of GPU nodes. THe minimum number of GPU worker is always 1  | `4` |
+| `keypair_name` | Name for IAM keypair for managing this cluster. | `2` |
+| `master_flavor` | Flavor of master nodes | `2` |
+| `worker_flavor` | Flavor of worker nodes | `2` |
+| `setup_lb_to_master_nodes` | Set-up a lobalancer for SSH accessto master nodes | `false` |
+| `mirror_url` | mirror for docker container | `harbor.stfc.ac.uk/magnum_mirror/` |
+### Instruction
+
 - In `playbooks/deploy_cluster.yml` check the config
 - Pay attention to `max_worker_nodes` and `flavor`, as the flavor cannot be changed after creation
 - This will also optionally setup a load balancer called `<cluster_name>_in` with SSH access on the users behalf if enabled
@@ -102,7 +124,13 @@ It's **highly** recommended that you setup a dedicated project with a high numbe
 - Export the kubectl config after the config command finishes
 - Check for kubectl connectivity `kubectl get nodes`
 - Check that all pods are created successfully with `kubectl get pods -n kube-system`
-
+## GPU
+### Variables (`/playbooks/build_gpu_driver.yml`)
+| Variable | Description | Defalut |
+| --------- | ---------- | ---------|
+| `FEDORA_VERSION` | OS version of the Kubernetes Node (CoreOS for STFC cloud) | `32` |
+| `NVIDIA_DRIVER_VERSION` | Nvidia driver version. See [link](https://hub.docker.com/r/nvidia/driver/tags) | `460.32.03` |
+| `HARBOR_TAG` | Target repository for pushing the GPU driver image. | `"harbor.stfc.ac.uk/magnum_mirror/nvidia_driver:{{ NVIDIA_DRIVER_VERSION }}-fedora{{ FEDORA_VERSION }}"` |
 ### Enabling GPU Workers
 - Edit `playbooks/build_gpu_driver.yml` to check the Nvidia driver and OS targetted
 - Run `ansible-playbook playbooks/build_gpu_driver.yml` to build and push the driver to the magnum mirror
@@ -255,6 +283,21 @@ To use the Native Authenticator:
 To authorize users after they sign up navigate to `/hub/authorize` (e.g. https://example.com/hub/authorize ). Unfortunately, there is no button to access this page so the URL must be directly changed.
 
 ## Deploying Jupyter hub
+### Variables (`/playbooks/deploy_jhub.yml`)
+| Variable | Description | Defalut |
+| --------- | ---------- | ---------|
+| `storage_class_name` | Name of the StorageClass for PV claim. | `"cinder-storage"` |
+| `storage_class_file` | Name of Kubernetes config file for StorageClass. (place the file in `/roles/deploy_jhub/files/`; This repo includes a config file for Cinder Storage (Openstack) and Rancher Local-path) | `"cinder-kube-storage.yaml"` |
+| `jhub_deployed_name` | Helm name of JupyterHub. | `jupyterhub` |
+| `jhub_namespace` | Kubernetes Namespace for JupyterHub | `jupyterhub` |
+| `jhub_version` | Helm chart version for JupyterHub (Newer versions may require a more recent kubernetes version)  | `"0.11.1"` |
+| `jhub_config_file` | Name of helm values file of JupyterHub (place the file in `/roles/deploy_jhub/files/`) | `2` |
+| `prometheus_deployed_name` | Helm name of Prometheus Stack | `prometheus` |
+| `prometheus_namespace` | Kubernetes Namespace for Prometheus Stack | `prometheus` |
+| `grafana_password` | Admin Password for Grafana. | `"temp_password"` |
+| `NVIDIA_DRIVER_VERSION` | This version needs have been built by running playbooks/build_gpu_driver.yml beforehand. By default, The repo is pointed towards STFC harbor. | `460.32.03` |
+
+### Instructions
 
 - Login to the openstack GUI before deploying, as this saves a step later...
 - Deploy the jupyterhub instance with `ansible-playbook playbooks/deploy_jhub.yml`
@@ -290,10 +333,11 @@ The currently issued certificate(s) can be viewed at: https://crt.sh/
 
 ## Prometheus Stack
 The Prometheus-Grafana stack is deployed automatically when deploying JupyterHub. user can set password using the `grafana_password` variable.
-
 The service monitors are pre-configured to monitor the Kubernetes cluster, JupyterHub and GPU-Operator.
-
 The default dashboard is located in the STFC folder which contains a comprehensive set of information.
+
+### Accessing Grafana and Prometheus dashboard
+User `kubectl get service -A` to check the IP of grafana and prometheus.
 
 ## Virtual Desktop
 In `/role/deploy_jhub/files/config.yaml` uncomment the part in profile list. 
