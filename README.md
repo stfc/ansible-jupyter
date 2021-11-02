@@ -340,7 +340,7 @@ The default dashboard is located in the STFC folder which contains a comprehensi
 User `kubectl get service -A` to check the IP of grafana and prometheus.
 
 ## Virtual Desktop
-In `/role/deploy_jhub/files/config.yaml` uncomment the part in profile list. 
+In `/role/deploy_jhub/files/config.yaml` uncomment the part in profile list.
 ```yaml
 singleuser:
 	...
