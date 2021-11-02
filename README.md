@@ -1,7 +1,7 @@
 
 # Ansible JupyterHub Server with Prometheus Stacks for STFC cloud Openstacks
-
-Based on the STFC Ansible JupyterHub Server for STFC cloud
+Provides a Magnum Kubernetes cluster, with autoscaling enabled and configured,
+and a JupyterHub Service. This uses the helm chart provided by [ZeroToJupyterHub](https://github.com/jupyterhub/zero-to-jupyterhub-k8s).
 ## Contents
 - [Features](#features)
 - [Limitations](#limitations)
