@@ -89,7 +89,7 @@ singleuser:
     #   description: |
     #     This configuration gives you 2 CPUs, 3GB of RAM, and a GPU
     #   kubespawner_override:
-    #     image: harbor.stfc.ac.uk/stfc-cloud/jupyterhub-desktop-gpu-development:latest
+    #     image: harbor.stfc.ac.uk/stfc-cloud/jupyterhub-desktop-gpu:latest
     #     cpu_limit: 2
     #     cpu_guarantee: 0.05
     #     mem_limit: "3G"
