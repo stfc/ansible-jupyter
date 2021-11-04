@@ -37,6 +37,7 @@ and a JupyterHub Service. This uses the helm chart provided by [ZeroToJupyterHub
   * [Single hub instance](#single-hub-instance)
   * [Autoscaler](#autoscaler)
   * [Proxy_public service notes](#proxy-public-service-notes)
+- [Related repositories](#related-repositories)
 
 ## Features
 - **(New) Deploy Prometheus stack to monitor the cluster**
@@ -408,6 +409,6 @@ To fix this:
 - Re-run the ansible deployment script (see deploy Jupyterhub), this will recreate the service.
 - Associate the desired floating IP as described above
 
-## Related Repositories
+## Related repositories
 - [Kubernetes-GPU-Jupyterhub-Dashboard](https://github.com/stfc/Kubernetes-GPU-Jupyterhub-Dashboard)
 - JupyterDesktop Bundle Images (Docker build instructions for JupyterHub Image)
