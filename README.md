@@ -408,3 +408,6 @@ To fix this:
 - Re-run the ansible deployment script (see deploy Jupyterhub), this will recreate the service.
 - Associate the desired floating IP as described above
 
+## Related Repositories
+- [Kubernetes-GPU-Jupyterhub-Dashboard](https://github.com/stfc/Kubernetes-GPU-Jupyterhub-Dashboard)
+- JupyterDesktop Bundle Images (Docker build instructions for JupyterHub Image)
