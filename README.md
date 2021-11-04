@@ -411,4 +411,4 @@ To fix this:
 
 ## Related repositories
 - [Kubernetes-GPU-Jupyterhub-Dashboard](https://github.com/stfc/Kubernetes-GPU-Jupyterhub-Dashboard)
-- JupyterDesktop Bundle Images (Docker build instructions for JupyterHub Image)
+- JupyterDesktop Bundle Images (Docker build instructions for JupyterHub Image) (STFC GitLab Link)
