@@ -28,7 +28,10 @@ singleuser:
 
     type: dynamic
     capacity: 1Gi # 1GB is the minimum Cinder will serve
-
+    dynamic:
+      ## add storage class name here
+      storageClass: "cinder-storage"
+      
   # Default profile, this is what the placeholders will use
   startTimeout: 1200 # seconds == 20 minutes
   cpu:
@@ -39,10 +42,10 @@ singleuser:
     guarantee: 1.8G
   #Uncomment this to grant sudo right to users (only works with images from jupyter/docker-stacks)
   # extraEnv:
-  #   GRANT_SUDO:
-  #     "yes"
+  #   GRANT_SUDO: "yes"
+  #   NOTEBOOK_ARGS: "--allow-root"
   # uid: 0
-  # cmd: null
+  # cmd: start-singleuser.sh
 
   profileList:
     - display_name: "Default: Normal Size"

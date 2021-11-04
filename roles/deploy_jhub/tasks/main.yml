@@ -17,7 +17,7 @@
     name: jupyterhub
     repo_url: https://jupyterhub.github.io/helm-chart/
 
-- name: Install pre-set version of Jhub
+- name: Install pre-set version of Jhub (Plugin Mode)
   kubernetes.core.helm:
     chart_ref: jupyterhub/jupyterhub
     create_namespace: yes
@@ -26,13 +26,13 @@
     name: "{{ jhub_deployed_name }}"
     chart_version: "{{ jhub_version }}"
     release_namespace: "{{ jhub_namespace }}"
-    release_values:
-      singleuser:
-        storage:
-          dynamic:
-            storageClass: "{{ storage_class_name }}"
     values_files:
       - "{{ role_path }}/files/{{ jhub_config_file }}"
+  when: jupyter_large_image_install_mode == false
+
+- name: Install pre-set version of Jhub (Command Mode)
+  command: helm install {{ jhub_deployed_name }} jupyterhub/jupyterhub -f "{{ role_path }}/files/{{ jhub_config_file }}" --timeout "2h" --create-namespace --namespace {{ jhub_namespace }} --version "{{ jhub_version }}"
+  when: jupyter_large_image_install_mode == true
 
 - name: Create namespace for Nvidia components
   kubernetes.core.k8s:
