@@ -351,7 +351,7 @@ singleuser:
     #   description: |
     #     Deploy image with vitual desktop 4 CPUs, 4GB RAM
     #   kubespawner_override:
-    #     image: harbor.stfc.ac.uk/stfc-cloud/jupyterhub-vdi-proxy:latest
+    #     image: harbor.stfc.ac.uk/stfc-cloud/jupyterhub-desktop-development:latest
     #     cpu_limit: 4
     #     cpu_guarantee: 0.05
     #     mem_limit: "4G"
@@ -366,10 +366,10 @@ would only work for images originated from [jupyter/docker-stack](https://github
 singleuser:
 	...
   # extraEnv:
-  #   GRANT_SUDO:
-  #     "yes"
+  #   GRANT_SUDO: "yes"
+  #   NOTEBOOK_ARGS: "--allow-root"
   # uid: 0
-  # cmd: null
+  # cmd: start-singleuser.sh
 ```
 
 
