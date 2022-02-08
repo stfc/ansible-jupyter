@@ -119,7 +119,7 @@ It's **highly** recommended that you setup a dedicated project with a high numbe
 - Pay attention to `max_worker_nodes` and `flavor`, as the flavor cannot be changed after creation
 - This will also optionally setup a load balancer called `<cluster_name>_in` with SSH access on the users behalf if enabled
 - Deploy with `ansible-playbook -i <name_of_inventory> playbooks/deploy_cluster.yml`
-- For example, to deploy to a development project `ansible-playbook -i dev_inventory/openstack.yml playbooks/deploy_cluster`
+- For example, to deploy to a development project `ansible-playbook -i dev_inventory/openstack.yml playbooks/deploy_cluster.yml`
 - The status of the cluster deployment can be monitored with `watch openstack coe cluster list` or on the web GUI
 - One deployed pull the config to your local machine with `openstack coe cluster config <cluster_name>`. This will copy a `config` file into your current directory
 - Export the kubectl config after the config command finishes
