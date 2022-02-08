@@ -72,8 +72,8 @@ and a JupyterHub Service. This uses the helm chart provided by [ZeroToJupyterHub
 		- setuptools-rust
 		- openstacksdk 
 		- openshift
-- python3-openstackclient
-- python3-magnumclient
+- python3-openstackclient 
+- python3-magnumclient (make sure to install the latest version, version from `apt` and default `pip` might be outdated)
 - Docker (Optional for GPU image building)
 ### Local Environment Setup
 - Upgrade pip3 as the default version is too old to handle the required deps: `pip3 install --upgrade`
