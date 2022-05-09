@@ -1,3 +1,4 @@
 collections:
   - name: openstack.cloud
+  - name: community.kubernetes
   - name: kubernetes.core
