@@ -1,6 +1,3 @@
-- name: Test K8s service is contactable. If this fails check $KUBECONFIG is set.
-  kubernetes.core.k8s_cluster_info:
-
 - name: Enable PV Claims on Cinder
   kubernetes.core.k8s:
     state: present
@@ -17,7 +14,7 @@
     name: jupyterhub
     repo_url: https://jupyterhub.github.io/helm-chart/
 
-- name: Install pre-set version of Jhub (Plugin Mode)
+- name: Install pre-set version of Jhub. This may take up to 15m to pull various images...
   kubernetes.core.helm:
     chart_ref: jupyterhub/jupyterhub
     create_namespace: yes
@@ -28,11 +25,7 @@
     release_namespace: "{{ jhub_namespace }}"
     values_files:
       - "{{ role_path }}/files/{{ jhub_config_file }}"
-  when: jupyter_large_image_install_mode == false
-
-- name: Install pre-set version of Jhub (Command Mode)
-  command: helm install {{ jhub_deployed_name }} jupyterhub/jupyterhub -f "{{ role_path }}/files/{{ jhub_config_file }}" --timeout "2h" --create-namespace --namespace {{ jhub_namespace }} --version "{{ jhub_version }}"
-  when: jupyter_large_image_install_mode == true
+    timeout: "15m"
 
 - name: Create namespace for Nvidia components
   kubernetes.core.k8s:
@@ -44,7 +37,7 @@
     - gpu-operator-resources
 
 - name: Create the priorityClassName for nvidiaComponent
-  # The default will set gpu daemonset and operator at system-node-critical 
+  # The default will set gpu daemonset and operator at system-node-critical
   # which can't start outside of kube-system namespace in earlier version of k8s (<1.17)
   kubernetes.core.k8s:
     state: present
@@ -56,9 +49,10 @@
     repo_url: https://nvidia.github.io/gpu-operator
 
 - name: Install GPU Operator, pointing to own driver
-  kubernetes.core.helm:
-    chart_ref: nvidia/gpu-operator
+  community.kubernetes.helm:
+    chart_ref: gpu-operator/gpu-operator
     update_repo_cache: yes
+    chart_version: "1.5.2"
     # Pulled from default
     name: gpu-operator
     release_namespace: gpu-operator
