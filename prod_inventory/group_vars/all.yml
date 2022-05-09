@@ -1,1 +1,2 @@
-cloud_name_var: "jupyter-prod"
+cloud_name_var: "jupyter-training"
+keypair_name: "alex-magnum"

@@ -2,17 +2,15 @@
   roles:
     - k8s_cluster
   vars:
-    release_version: "1-2" # Magnum will replace . with - breaking things
-    cluster_name: "jupyter-{{ release_version }}"
+    release_version: "5-0" # Magnum will replace . with - breaking things
+    cluster_name: "jupyter-training-{{ release_version }}"
     num_masters: 2
-    num_workers: 1
-    max_worker_nodes: 10
-    max_gpu_nodes: 4
-
-    keypair_name: "your_user_key_pair"
+    num_workers: 2
+    max_worker_nodes: 100
+    max_gpu_nodes: 100
 
     master_flavor: "c3.small"
-    worker_flavor: "c3.medium"
+    worker_flavor: "l2.xsmall"
     gpu_flavor: "g-p4000.x1"
 
     # Useful for diagnostics, but should only be created when required

@@ -36,3 +36,4 @@
 
     # This version needs have been built by running playbooks/build_gpu_driver.yml beforehand
     NVIDIA_DRIVER_VERSION: 460.32.03
+    #NVIDIA_DRIVER_VERSION: 470.82.01
