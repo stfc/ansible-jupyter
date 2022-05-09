@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  annotations:
+    meta.helm.sh/release-name: jhub
+    meta.helm.sh/release-namespace: jhub
+    pv.kubernetes.io/bind-completed: "yes"
+    pv.kubernetes.io/bound-by-controller: "yes"
+    volume.beta.kubernetes.io/storage-class: cinder-storage
+    volume.beta.kubernetes.io/storage-provisioner: cinder.csi.openstack.org
+  finalizers:
+  - kubernetes.io/pvc-protection
+  labels:
+    app: jupyterhub
+    app.kubernetes.io/managed-by: Helm
+    chart: jupyterhub-0.11.1
+    component: hub
+    heritage: Helm
+    release: jhub
+  name: hub-db-dir
+  namespace: jhub
+  selfLink: /api/v1/namespaces/jhub/persistentvolumeclaims/hub-db-dir
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: cinder-storage
+  volumeMode: Filesystem
+  volumeName: pvc-98486361-862d-4ed3-92f4-a9544286a0e9
