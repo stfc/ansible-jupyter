@@ -1,0 +1,35 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  annotations:
+    pv.kubernetes.io/provisioned-by: cinder.csi.openstack.org"
+  creationTimestamp: "2021-09-06T14:01:37Z"
+  finalizers:
+  - kubernetes.io/pv-protection
+  - external-attacher/cinder-csi-openstack-org
+  name: pvc-98486361-862d-4ed3-92f4-a9544286a0e9
+  resourceVersion: "86233299"
+  selfLink: /api/v1/persistentvolumes/pvc-98486361-862d-4ed3-92f4-a9544286a0e9
+  uid: 7a80b2a4-4cc6-478d-867c-1709e81c095c
+spec:
+  accessModes:
+  - ReadWriteOnce
+  capacity:
+    storage: 1Gi
+  claimRef:
+    apiVersion: v1
+    kind: PersistentVolumeClaim
+    name: hub-db-dir
+    namespace: jhub
+    resourceVersion: "86221092"
+    uid: 98486361-862d-4ed3-92f4-a9544286a0e9
+  csi:
+    driver: cinder.csi.openstack.org
+    fsType: ext4
+    volumeAttributes:
+      storage.kubernetes.io/csiProvisionerIdentity: 1623230313718-8081-cinder.csi.openstack.org
+    volumeHandle: d334aecc-3660-4faf-8e7c-dc18850f3f8b
+  persistentVolumeReclaimPolicy: Retain
+  volumeMode: Filesystem
+status:
+  phase: Bound
