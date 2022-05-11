@@ -66,18 +66,11 @@ and a JupyterHub Service. This uses the helm chart provided by [ZeroToJupyterHub
 - Helm 3 ([Installing Helm](https://helm.sh/docs/intro/install/))
 - kubectl ([Install Tools | Kubernetes](https://kubernetes.io/docs/tasks/tools/))
 - Python 3
-	- Packages
-		- ansible
-		- setuptools 
-		- setuptools-rust
-		- openstacksdk 
-		- openshift
-- python3-openstackclient 
-- python3-magnumclient (make sure to install the latest version, version from `apt` and default `pip` might be outdated)
+  - `ansible, python-openstackclient, python-magnumclient, kubernetes`
 - Docker (Optional for GPU image building)
 ### Local Environment Setup
 - Upgrade pip3 as the default version is too old to handle the required deps: `pip3 install --upgrade`
-- Activate .venv if present then install pip deps: `pip3 install ansible setuptools setuptools-rust openstacksdk openshift`
+- Activate .venv if present then install pip deps: `pip3 install ansible setuptools setuptools-rust openstacksdk`
 - Clone the repository and cd into it
 - Install requirements `ansible-galaxy collection install -r requirements.yml`
 - Obtain a copy of clouds.yaml for your project, place it in `~/.config/openstack/clouds.yaml` you may need to create the parent directory
@@ -107,7 +100,7 @@ It's **highly** recommended that you setup a dedicated project with a high numbe
 | `num_masters` | Number of master nodes. | `2` |
 | `num_workers` | Minimum number of worker nodes. | `1` |
 | `max_worker_nodes` | Maximum number of worker nodes. | `10` |
-| `max_gpu_nodes` | Maximum number of GPU nodes. THe minimum number of GPU worker is always 1  | `4` |
+| `max_gpu_nodes` | Maximum number of GPU nodes. The minimum number of GPU worker is always 1  | `4` |
 | `keypair_name` | Name for IAM keypair for managing this cluster. | `2` |
 | `master_flavor` | Flavor of master nodes | `2` |
 | `worker_flavor` | Flavor of worker nodes | `2` |
@@ -320,7 +313,7 @@ As there are a limited number of attempts we can do (see [rate limit](https://le
 We need to force the HTTPS issuer to retry:
 - `kubectl get pods` and take note of the pod name with `autohttps`
 - Delete the auto HTTPS pod like so: `k delete pod/autohttps-f954bb4d9-p2hnd` with the unique suffix varying on your cluster
-- Wait 1 minute. The logs can be monitored with: `watch kubectl logs service/proxy-public -n jhub -c traefik`
+- Wait 1 minute. The logs can be monitored with: `watch kubectl logs service/proxy-public -n jupyterhub -c traefik`
 - Warnings about implicit names can be ignored. If successful there will be *no* error printed after a minute.
 - Go to `https://<domain>.com` and it should be encrypted.
 
@@ -344,9 +337,9 @@ User `kubectl get service -A` to check the IP of grafana and prometheus.
 In `/role/deploy_jhub/files/config.yaml` uncomment the part in profile list.
 ```yaml
 singleuser:
-	...
+  ...
   profilelist:
-  	...
+    ...
     # - display_name: "VDI-testing"
     #   description: |
     #     Deploy image with vitual desktop 4 CPUs, 4GB RAM
@@ -364,7 +357,7 @@ If you want to enable sudoer for users you can uncomment this block as well. How
 would only work for images originated from [jupyter/docker-stack](https://github.com/jupyter/docker-stacks) and allow sudoer for all images.
 ```yaml
 singleuser:
-	...
+  ...
   # extraEnv:
   #   GRANT_SUDO: "yes"
   #   NOTEBOOK_ARGS: "--allow-root"
