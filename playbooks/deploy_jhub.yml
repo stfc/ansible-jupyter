@@ -20,7 +20,7 @@
     # K8s namespace
     jhub_namespace: jupyterhub
     # Helm chart version for Jhub (newer version may require newer kubernetes version >=1.17)
-    jhub_version: "0.11.1"
+    jhub_version: "1.2.0"
     # config file for JupyterHub helm chart (in "/roles/deploy_jhub/files")
     jhub_config_file: "config.yaml"
 
