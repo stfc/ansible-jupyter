@@ -1,15 +1,15 @@
 - hosts: localhost # Kubectl is configured from this machine
   roles:
     - deploy_jhub
-    - deploy_prometheus_stack
+    # - deploy_prometheus_stack
   vars:
     # Persistant Volume Claim
-    ## config file for storage class (Check with your cloud provider)  
+    ## config file for storage class (Check with your cloud provider)
     ## you have to change the name of storage class in config.yaml in /role/deplyo_jhub/files/{{ your_jhub_config_file }}
     #
-    # singleuser: 
-    #   storage: 
-    #     dynamic: 
+    # singleuser:
+    #   storage:
+    #     dynamic:
     #       Storage Class: {{ name }}
     storage_class_file: "cinder-kube-storage.yaml"
     # Timeout can occur for larger image size
