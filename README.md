@@ -70,7 +70,7 @@ and a JupyterHub Service. This uses the helm chart provided by [ZeroToJupyterHub
 - Docker (Optional for GPU image building)
 ### Local Environment Setup
 - Upgrade pip3 as the default version is too old to handle the required deps: `pip3 install --upgrade`
-- Activate .venv if present then install pip deps: `pip3 install ansible setuptools setuptools-rust openstacksdk`
+- Activate .venv if present then install pip deps: `pip3 install ansible setuptools setuptools-rust openstacksdk openshift pyyaml kubernetes`
 - Clone the repository and cd into it
 - Install requirements `ansible-galaxy collection install -r requirements.yml`
 - Obtain a copy of clouds.yaml for your project, place it in `~/.config/openstack/clouds.yaml` you may need to create the parent directory
