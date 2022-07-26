@@ -14,7 +14,7 @@
     name: jupyterhub
     repo_url: https://jupyterhub.github.io/helm-chart/
 
-- name: Install pre-set version of Jhub. This may take up to 15m to pull various images...
+- name: Install pre-set version of Jhub. This may take up to 25m to pull various images...
   kubernetes.core.helm:
     chart_ref: jupyterhub/jupyterhub
     create_namespace: yes
@@ -25,7 +25,7 @@
     release_namespace: "{{ jhub_namespace }}"
     values_files:
       - "{{ role_path }}/files/{{ jhub_config_file }}"
-    timeout: "15m"
+    timeout: "25m"
 
 - name: Create namespace for Nvidia components
   kubernetes.core.k8s:
@@ -49,10 +49,10 @@
     repo_url: https://nvidia.github.io/gpu-operator
 
 - name: Install GPU Operator, pointing to own driver
-  community.kubernetes.helm:
-    chart_ref: gpu-operator/gpu-operator
+  kubernetes.core.helm:
+    chart_ref: nvidia/gpu-operator
     update_repo_cache: yes
-    chart_version: "1.5.2"
+    chart_version: "1.11.0"
     # Pulled from default
     name: gpu-operator
     release_namespace: gpu-operator
@@ -62,6 +62,6 @@
       operator:
         priorityClassName: nvidia-priority-class
       driver:
-        repository: "harbor.stfc.ac.uk/stfc-cloud-private"
+        repository: "harbor.stfc.ac.uk/magnum_mirror"
         image: "nvidia_driver"
         version: "{{ NVIDIA_DRIVER_VERSION }}"

@@ -1,2 +1,2 @@
-cloud_name_var: "jupyter-training"
-keypair_name: "alex-magnum"
+cloud_name_var: "jupyter"
+keypair_name: "david_fair"

@@ -2,10 +2,11 @@
 
 docker_volume_size_gb: 10
 # Magnum deploys 1.0 by default, we need 1.19+ to be Node Group aware
-cluster_autoscaler_version: "v1.19.0"
-kube_tag: "v1.16.13"
+cluster_autoscaler_version: "v1.19.1"
+# Highest K8s version supported by Victoria and below
+kube_tag: "v1.18.20"
 # Because the official mirror (which we mirror from) uses vx.y.z instead of x.y.z that coreos uses
-etcd_tag: "v3.3.25"
+etcd_tag: "v3.5.4"
 
 # Kubernetes specific
 # We need to enable the priority plugin manually, the list of default plugins + 'Priority' is from:

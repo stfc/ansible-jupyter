@@ -1,3 +1,4 @@
 *.retry
 # Prevent commit of clouds.yaml
 *pem
+*roles/deploy_jhub/files/config.yaml
