@@ -52,7 +52,7 @@
   kubernetes.core.helm:
     chart_ref: nvidia/gpu-operator
     update_repo_cache: yes
-    chart_version: "1.5.2"
+    chart_version: "1.11.0"
     # Pulled from default
     name: gpu-operator
     release_namespace: gpu-operator
