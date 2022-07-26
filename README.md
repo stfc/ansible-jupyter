@@ -281,7 +281,6 @@ To authorize users after they sign up navigate to `/hub/authorize` (e.g. https:/
 | Variable | Description | Defalut |
 | --------- | ---------- | ---------|
 | `storage_class_file` | Name of Kubernetes config file for StorageClass. (place the file in `/roles/deploy_jhub/files/` and edit the relevant section in  `/roles/deploy_jhub/files/{jhub_config_file_}`;  This repo includes a config file for Cinder Storage (Openstack) and Rancher Local-path) | `"cinder-kube-storage.yaml"` |
-| `jupyter_large_image_install_mode` | Helm have a 5 min. timeout on Kubernetes command. The Helm chart pull Jupyter Notebook images to cluster during Timeout can occur for larger images | `true` |
 | `jhub_deployed_name` | Helm name of JupyterHub. | `jupyterhub` |
 | `jhub_namespace` | Kubernetes Namespace for JupyterHub | `jupyterhub` |
 | `jhub_version` | Helm chart version for JupyterHub (Newer versions may require a more recent kubernetes version)  | `"0.11.1"` |
