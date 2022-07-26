@@ -11,6 +11,15 @@
     namespace: kube-system
     chart_ref: "/tmp/cloud-provider-openstack/charts/cinder-csi-plugin"
 
+- name: Enable the training materials NFS share
+  kubernetes.core.k8s:
+    state: present
+    src: "{{ item }}"
+    namespace: "{{ jhub_namespace }}"
+  with_items:
+    - "{{ role_path }}/files/nfs-pvc.yaml"
+    - "{{ role_path }}/files/nfs-pv.yaml"
+
 - name: Install jhub helm repo
   kubernetes.core.helm_repository:
     name: jupyterhub
