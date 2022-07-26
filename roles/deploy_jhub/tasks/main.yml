@@ -1,13 +1,15 @@
-- name: Enable PV Claims on Cinder
-  kubernetes.core.k8s:
-    state: present
-    src: "{{ role_path }}/files/{{ storage_class_file }}"
+- name: Download the Cinder CSI Plugin
+  ansible.builtin.git:
+    repo: "https://github.com/kubernetes/cloud-provider-openstack.git"
+    dest: "/tmp/cloud-provider-openstack"
+    version: "release-1.24"
+    update: true # Automatically pull bug-fixes in
 
-- name: Create the working namespace
-  kubernetes.core.k8s:
-    name: "{{ jhub_namespace }}"
-    kind: Namespace
-    state: present
+- name: Install Cinder CSI
+  kubernetes.core.helm:
+    name: cinder-csi
+    namespace: kube-system
+    chart_ref: "/tmp/cloud-provider-openstack/charts/cinder-csi-plugin"
 
 - name: Install jhub helm repo
   kubernetes.core.helm_repository:
