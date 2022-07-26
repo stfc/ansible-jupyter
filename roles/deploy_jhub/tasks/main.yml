@@ -36,14 +36,6 @@
     state: present
   with_items:
     - gpu-operator
-    - gpu-operator-resources
-
-- name: Create the priorityClassName for nvidiaComponent
-  # The default will set gpu daemonset and operator at system-node-critical
-  # which can't start outside of kube-system namespace in earlier version of k8s (<1.17)
-  kubernetes.core.k8s:
-    state: present
-    src: "{{ role_path }}/files/nvidia-priority-class.yaml"
 
 - name: Install Nvidia GPU Operator repo
   kubernetes.core.helm_repository:
@@ -55,14 +47,9 @@
     chart_ref: nvidia/gpu-operator
     update_repo_cache: yes
     chart_version: "1.11.0"
-    # Pulled from default
     name: gpu-operator
     release_namespace: gpu-operator
     release_values:
-      daemonsets:
-        priorityClassName: nvidia-priority-class
-      operator:
-        priorityClassName: nvidia-priority-class
       driver:
         repository: "harbor.stfc.ac.uk/magnum_mirror"
         image: "nvidia_driver"
