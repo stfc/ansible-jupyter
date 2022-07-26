@@ -1,5 +1,0 @@
-plugin: openstack.cloud.openstack # Need full path else newer plugin falls over
-fail_on_errors: yes
-private: yes # Always use internal networks instead of Floating
-only_clouds:
-  - "jupyter"
