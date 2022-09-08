@@ -61,11 +61,11 @@
   kubernetes.core.helm:
     chart_ref: nvidia/gpu-operator
     update_repo_cache: yes
-    chart_version: "1.11.0"
+    chart_version: "1.11.1"
     name: gpu-operator
     release_namespace: gpu-operator
     release_values:
       driver:
-        repository: "harbor.stfc.ac.uk/magnum_mirror"
-        image: "nvidia_driver"
+        repository: "nvcr.io/nvidia"
+        image: "driver"
         version: "{{ NVIDIA_DRIVER_VERSION }}"

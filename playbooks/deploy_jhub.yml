@@ -22,6 +22,5 @@
     # Even if you don't use GPUs we deploy the Nvidia GPU operator
     # for simplicity (otherwise we need another var to enable GPU support across notebooks).
 
-    # This version needs have been built by running playbooks/build_gpu_driver.yml beforehand
-    NVIDIA_DRIVER_VERSION: 460.32.03
-    #NVIDIA_DRIVER_VERSION: 470.82.01
+    # This version will be pulled from the Nvidia NGC catalogue
+    NVIDIA_DRIVER_VERSION: 515.48.07
