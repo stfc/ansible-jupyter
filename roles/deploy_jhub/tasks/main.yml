@@ -11,6 +11,16 @@
     namespace: kube-system
     chart_ref: "/tmp/cloud-provider-openstack/charts/cinder-csi-plugin"
 
+- name: Install Openstack Controller Manager
+  kubernetes.core.k8s:
+    state: present
+    src: "{{ item }}"
+    namespace: kube-system
+  with_items:
+    - "/tmp/cloud-provider-openstack/manifests/controller-manager/cloud-controller-manager-roles.yaml"
+    - "/tmp/cloud-provider-openstack/manifests/controller-manager/cloud-controller-manager-role-bindings.yaml"
+    - "/tmp/cloud-provider-openstack/manifests/controller-manager/openstack-cloud-controller-manager-ds.yaml"
+
 - name: Create the working namespace
   kubernetes.core.k8s:
     name: "{{ jhub_namespace }}"
