@@ -6,22 +6,14 @@ Provides a JupyterHub Service on an existing Openstack Cluster. This uses the he
 - [Limitations](#limitations)
 - [Requirements](#requirements)
   * [Local Environment Setup](#local-environment-setup)
-  * [Recommended Setup](#recommended-setup)
 - [GPU](#gpu)
-  * [Variables (`/playbooks/build_gpu_driver.yml`)](#variables----playbooks-build-gpu-driveryml--)
-  * [Enabling GPU Workers](#enabling-gpu-workers)
-  * [Manual Cluster config fix for GPU Workers](#manual-cluster-config-fix-for-gpu-workers)
-  * [Priority Class for GPU-operator](#priority-class-for-gpu-operator)
 - [Kubectl Namespaces](#kubectl-namespaces)
 - [Jupyter Hub Config](#jupyter-hub-config)
   * [HTTPS Config](#https-config)
     + [Setting up DNS for Lets Encrypt](#setting-up-dns-for-lets-encrypt)
     + [Using existing TLS Certificate](#using-existing-tls-certificate)
-  * [Using Oauth Sign in (`config-oauth.yaml.template`)](#using-oauth-sign-in---config-oauthyamltemplate--)
-    + [Setting users / admin groups for Oauth](#setting-users---admin-groups-for-oauth)
-  * [Using Native Authenticator (`config-native.yaml.template`)](#using-native-authenticator---config-nativeyamltemplate--)
 - [Deploying Jupyter hub](#deploying-jupyter-hub)
-  * [Variables (`/playbooks/deploy_jhub.yml`)](#variables----playbooks-deploy-jhubyml--)
+  * [Variables (`/playbooks/deploy_jhub.yml`)](#variables-playbooksdeploy_jhubyml)
   * [Instructions](#instructions)
   * [SSL Setup](#ssl-setup)
   * [Note on Renewal Limits](#note-on-renewal-limits)
@@ -32,10 +24,11 @@ Provides a JupyterHub Service on an existing Openstack Cluster. This uses the he
 - [Maintenance and Notes](#maintenance-and-notes)
   * [Single hub instance](#single-hub-instance)
   * [Autoscaler](#autoscaler)
-  * [Proxy_public service notes](#proxy-public-service-notes)
+  * [Proxy_public service notes](#proxy_public-service-notes)
 - [Related repositories](#related-repositories)
 
 ## Features
+
 - **(New) Deploy Prometheus stack to monitor the cluster**
 - **(New) Deploy a pre-configured Grafana dashboard for monitoring GPU and JupyterHub**
 - **(New) Deploy Virtual Desktop environment**
@@ -53,21 +46,26 @@ Provides a JupyterHub Service on an existing Openstack Cluster. This uses the he
 - Existing Cinder volumes cannot be re-attached/transferred on cluster re-creation
 - The primary worker/master flavour cannot be changed after creation
 - Cannot use placeholders for optional profiles (e.g. GPU placeholder)
-- Each node takes 10-15 minutes to spin up due to Magnum overhead, if no placeholders are available a user will have to wait this long.
 - Some metrics can't be selected by node name in Grafana dashboard as it requires a reverse DNS.
 
 ## Requirements
+
 - Ansible ([Installing Ansible — Ansible Documentation](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html))
 - Helm 3 ([Installing Helm](https://helm.sh/docs/intro/install/))
 - kubectl ([Install Tools | Kubernetes](https://kubernetes.io/docs/tasks/tools/))
 - Python 3
   - `ansible, kubernetes`
-- Docker (Optional for GPU image building)
 ### Local Environment Setup
 - Upgrade pip3 as the default version is too old to handle the required deps: `pip3 install pip --upgrade`
 - Activate .venv if present then install pip deps: `pip3 install ansible setuptools setuptools-rust pyyaml kubernetes`
 - Clone the repository and cd into it
 - Install requirements `ansible-galaxy collection install -r requirements.yml`
+
+## GPU
+
+- GPU drivers will automatically be pulled from the Nvidia NGC catalogue
+- Driver version is defined in playbooks/deploy_jhub.yml
+
 
 ## Kubectl Namespaces
 
@@ -106,52 +104,6 @@ The primary disadvantage of this, is both remembering to renew the certificate a
 
 A Kubernetes secret is used, instructions can be found [here](https://zero-to-jupyterhub.readthedocs.io/en/latest/administrator/security.html#specify-certificate-through-secret-resource)
 
-### Using Oauth Sign in (`config-oauth.yaml.template`)
-
-For short-term deployments, where a list of authorized users is suitable, simply use the native authenticator ( and see below.
-
-If you are using another OAuth provider please contact them for support.
-
-If you are using IRIS IAM the secrets must be generated for the config file as follows:
-
-- Visit [IRIS IAM](https://iris-iam.stfc.ac.uk/) and self-service client registration
-- Add a new client (or edit an existing one with secrets previously generated)
-- Ensure you fill out as many details as possible for production. These steps help users recognise OAuth phising attacks
-- Add `https://<domain>` and `https://<domain>/hub/spawn` to the allowed redirects
-- (E.g. `https://example.com` and `https://example.com/spawn`)
-- Under scopes untick everything except `openid` `preferred_username`, `profile` and `email`.
-- Save the generated ID/secrets. 
-- Take note of the **registration token**, this is not used in config but you will not be able to access / modify your token afterward without it.
-- Copy `config-oauth.yaml.template` to config.yaml and populate the file with the above details.
-
-#### Setting users / admin groups for Oauth
-
-By default the config template assumes the user will be using groups with Oauth to limit access to approved groups and assign admin privileges.
-
-Simply modify the `allowed_groups` and `admin_groups` contains the group names you intend to be allowed access and admin privileges respectively.
-
-To allow anyone who completes Oauth login access, simply remove all entries from both lists. This will also disable admin accounts too.
-
-### Using Native Authenticator (`config-native.yaml.template`)
-
-If your service is short lived (<1 month), then an alternative is to use the Native Authenticator. This is especially useful for running events where users won't have an IAM account (e.g. school outreach).
-
-In this mode anybody can sign up, however, before they can access the service their account most be approved by any of the pre-defined admin accounts.
-
-Note: This deployment is **not** suitable for long-term deployments; the hashed passwords are stored within the cluster which typically is not actively maintained after deployment. Instead invest the time to use OAuth or LDAP, so that your password hashes are stored on an actively maintained external service.
-
-To use the Native Authenticator:
-
-- Copy `config-native-auth.yaml.template` to `config.yaml`
-- Change the number and name of admin usernames as appropriate
-- Uncomment and fill allowed_user, which is a user name whitelist, if required
-- After service deployment you'll need to sign up as the admin user
-- The sign up page will state your account needs conformation, for an admin account you can now login directly
-
-**Important:** As admin account credentials are created via a 'sign up'. These must be registered immediately after creation to secure them against someone else registering them instead.
-
-To authorize users after they sign up navigate to `/hub/authorize` (e.g. https://example.com/hub/authorize ). Unfortunately, there is no button to access this page so the URL must be directly changed.
-
 ## Deploying Jupyter hub
 ### Variables (`/playbooks/deploy_jhub.yml`)
 | Variable | Description | Default |
@@ -163,7 +115,7 @@ To authorize users after they sign up navigate to `/hub/authorize` (e.g. https:/
 | `prometheus_deployed_name` | Helm name of Prometheus Stack | `prometheus` |
 | `prometheus_namespace` | Kubernetes Namespace for Prometheus Stack | `prometheus` |
 | `grafana_password` | Admin Password for Grafana. | `"temp_password"` |
-| `NVIDIA_DRIVER_VERSION` | This version needs have been built by running playbooks/build_gpu_driver.yml beforehand. By default, The repo is pointed towards STFC harbor. | `460.32.03` |
+| `NVIDIA_DRIVER_VERSION` | Image tag from the Nvidia NGC catalogue | `515.48.07` |
 
 ### Instructions
 
@@ -172,7 +124,7 @@ To authorize users after they sign up navigate to `/hub/authorize` (e.g. https:/
 - Whilst it's deploying go to Network -> Load Balancers, look for one labelled with `proxy_public`for JHub, it may take a minute to appear as images are pulled.
 - Take note of the 10.0.x.x IP, go to Floating IPs (FIP).
 - Associate your prepared FIP with matching DNS records to that whilst the load balancer is being created.
-- If Magnum managed to associate a random FIP before you disassociate and release. But this will happen as the final step of creating the load balancer if you haven't already.
+- If you do not associate a prepared FIP, Cluster API will associate a random FIP as the final step of creating the load balancer, which must be disassociated and released before your FIP can be associated.
 
 ### SSL Setup
 
