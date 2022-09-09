@@ -33,6 +33,7 @@ Provides a JupyterHub Service on an existing Openstack Cluster. This uses the he
 
 ## Features
 
+- **(New) Longhorn support**
 - **(New) LDAP authentication**
 - **(New) Deploy Prometheus stack to monitor the cluster**
 - **(New) Deploy a pre-configured Grafana dashboard for monitoring GPU and JupyterHub**
@@ -43,12 +44,10 @@ Provides a JupyterHub Service on an existing Openstack Cluster. This uses the he
 - Placeholder support for the default profile, allowing users to get a Jupyter server in <3 minutes
 - Ability to use mixed node sizes
 - Nvidia GPU Support
-- Cinder support
 - Automatic HTTPS support, can have a instance up in <1 hour (with pre-requisites in place)
 
 ## Limitations
 
-- Existing Cinder volumes cannot be re-attached/transferred on cluster re-creation
 - The primary worker/master flavour cannot be changed after creation
 - Cannot use placeholders for optional profiles (e.g. GPU placeholder)
 - Some metrics can't be selected by node name in Grafana dashboard as it requires a reverse DNS.
