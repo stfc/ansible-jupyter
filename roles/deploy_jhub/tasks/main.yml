@@ -1,13 +1,40 @@
-- name: Enable PV Claims on Cinder
+- name: Download the Cinder CSI Plugin
+  ansible.builtin.git:
+    repo: "https://github.com/kubernetes/cloud-provider-openstack.git"
+    dest: "/tmp/cloud-provider-openstack"
+    version: "release-1.24"
+    update: true # Automatically pull bug-fixes in
+
+- name: Install Cinder CSI
+  kubernetes.core.helm:
+    name: cinder-csi
+    namespace: kube-system
+    chart_ref: "/tmp/cloud-provider-openstack/charts/cinder-csi-plugin"
+
+- name: Install Openstack Controller Manager
   kubernetes.core.k8s:
     state: present
-    src: "{{ role_path }}/files/{{ storage_class_file }}"
+    src: "{{ item }}"
+    namespace: kube-system
+  with_items:
+    - "/tmp/cloud-provider-openstack/manifests/controller-manager/cloud-controller-manager-roles.yaml"
+    - "/tmp/cloud-provider-openstack/manifests/controller-manager/cloud-controller-manager-role-bindings.yaml"
+    - "/tmp/cloud-provider-openstack/manifests/controller-manager/openstack-cloud-controller-manager-ds.yaml"
 
 - name: Create the working namespace
   kubernetes.core.k8s:
     name: "{{ jhub_namespace }}"
     kind: Namespace
     state: present
+
+- name: Enable the training materials NFS share
+  kubernetes.core.k8s:
+    state: present
+    src: "{{ item }}"
+    namespace: "{{ jhub_namespace }}"
+  with_items:
+    - "{{ role_path }}/files/nfs-pvc.yaml"
+    - "{{ role_path }}/files/nfs-pv.yaml"
 
 - name: Install jhub helm repo
   kubernetes.core.helm_repository:
@@ -34,14 +61,6 @@
     state: present
   with_items:
     - gpu-operator
-    - gpu-operator-resources
-
-- name: Create the priorityClassName for nvidiaComponent
-  # The default will set gpu daemonset and operator at system-node-critical
-  # which can't start outside of kube-system namespace in earlier version of k8s (<1.17)
-  kubernetes.core.k8s:
-    state: present
-    src: "{{ role_path }}/files/nvidia-priority-class.yaml"
 
 - name: Install Nvidia GPU Operator repo
   kubernetes.core.helm_repository:
@@ -52,16 +71,11 @@
   kubernetes.core.helm:
     chart_ref: nvidia/gpu-operator
     update_repo_cache: yes
-    chart_version: "1.11.0"
-    # Pulled from default
+    chart_version: "1.11.1"
     name: gpu-operator
     release_namespace: gpu-operator
     release_values:
-      daemonsets:
-        priorityClassName: nvidia-priority-class
-      operator:
-        priorityClassName: nvidia-priority-class
       driver:
-        repository: "harbor.stfc.ac.uk/magnum_mirror"
-        image: "nvidia_driver"
+        repository: "nvcr.io/nvidia"
+        image: "driver"
         version: "{{ NVIDIA_DRIVER_VERSION }}"

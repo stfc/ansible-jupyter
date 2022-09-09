@@ -1,31 +1,19 @@
 
 # Ansible JupyterHub Server with Prometheus Stacks for STFC cloud Openstacks
-Provides a Magnum Kubernetes cluster, with autoscaling enabled and configured,
-and a JupyterHub Service. This uses the helm chart provided by [ZeroToJupyterHub](https://github.com/jupyterhub/zero-to-jupyterhub-k8s).
+Provides a JupyterHub Service on an existing Openstack Cluster. This uses the helm chart provided by [ZeroToJupyterHub](https://github.com/jupyterhub/zero-to-jupyterhub-k8s).
 ## Contents
 - [Features](#features)
 - [Limitations](#limitations)
 - [Requirements](#requirements)
   * [Local Environment Setup](#local-environment-setup)
-  * [Recommended Setup](#recommended-setup)
-- [Deploying a cluster](#deploying-a-cluster)
-  * [Variables (`/playbooks/deploy_cluster.yml`)](#variables----playbooks-deploy-clusteryml--)
-  * [Instruction](#instruction)
 - [GPU](#gpu)
-  * [Variables (`/playbooks/build_gpu_driver.yml`)](#variables----playbooks-build-gpu-driveryml--)
-  * [Enabling GPU Workers](#enabling-gpu-workers)
-  * [Manual Cluster config fix for GPU Workers](#manual-cluster-config-fix-for-gpu-workers)
-  * [Priority Class for GPU-operator](#priority-class-for-gpu-operator)
 - [Kubectl Namespaces](#kubectl-namespaces)
 - [Jupyter Hub Config](#jupyter-hub-config)
   * [HTTPS Config](#https-config)
     + [Setting up DNS for Lets Encrypt](#setting-up-dns-for-lets-encrypt)
     + [Using existing TLS Certificate](#using-existing-tls-certificate)
-  * [Using Oauth Sign in (`config-oauth.yaml.template`)](#using-oauth-sign-in---config-oauthyamltemplate--)
-    + [Setting users / admin groups for Oauth](#setting-users---admin-groups-for-oauth)
-  * [Using Native Authenticator (`config-native.yaml.template`)](#using-native-authenticator---config-nativeyamltemplate--)
 - [Deploying Jupyter hub](#deploying-jupyter-hub)
-  * [Variables (`/playbooks/deploy_jhub.yml`)](#variables----playbooks-deploy-jhubyml--)
+  * [Variables (`/playbooks/deploy_jhub.yml`)](#variables-playbooksdeploy_jhubyml)
   * [Instructions](#instructions)
   * [SSL Setup](#ssl-setup)
   * [Note on Renewal Limits](#note-on-renewal-limits)
@@ -36,166 +24,52 @@ and a JupyterHub Service. This uses the helm chart provided by [ZeroToJupyterHub
 - [Maintenance and Notes](#maintenance-and-notes)
   * [Single hub instance](#single-hub-instance)
   * [Autoscaler](#autoscaler)
-  * [Proxy_public service notes](#proxy-public-service-notes)
+  * [Proxy_public service notes](#proxy_public-service-notes)
 - [Related repositories](#related-repositories)
 
 ## Features
+
 - **(New) Deploy Prometheus stack to monitor the cluster**
 - **(New) Deploy a pre-configured Grafana dashboard for monitoring GPU and JupyterHub**
 - **(New) Deploy Virtual Desktop environment**
 - **(New) Allow GPU worker for lower Kubernetes version**
 - Oauth2 or Local Authentication
 - Multiple profiles for different resources limits
-- Node Autoscaling on Openstack
 - Placeholder support for the default profile, allowing users to get a Jupyter server in <3 minutes
-- Ability to use mixed node sizes (w/ autoscaling)
-- Nvidia GPU Support (w/ autoscaling)
-- Cinder support (see limitations)
-- Automatic HTTPS support, can have a instan/ce up in <1 hour (with pre-requisites in place)
+- Ability to use mixed node sizes
+- Nvidia GPU Support
+- Cinder support
+- Automatic HTTPS support, can have a instance up in <1 hour (with pre-requisites in place)
 
 ## Limitations
 
 - Existing Cinder volumes cannot be re-attached/transferred on cluster re-creation
 - The primary worker/master flavour cannot be changed after creation
 - Cannot use placeholders for optional profiles (e.g. GPU placeholder)
-- Each node takes 10-15 minutes to spin up due to Magnum overhead, if no placeholders are available a user will have to wait this long.
 - Some metrics can't be selected by node name in Grafana dashboard as it requires a reverse DNS.
 
 ## Requirements
+
 - Ansible ([Installing Ansible — Ansible Documentation](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html))
 - Helm 3 ([Installing Helm](https://helm.sh/docs/intro/install/))
 - kubectl ([Install Tools | Kubernetes](https://kubernetes.io/docs/tasks/tools/))
 - Python 3
-  - `ansible, python-openstackclient, python-magnumclient, kubernetes`
-- Docker (Optional for GPU image building)
+  - `ansible, kubernetes`
 ### Local Environment Setup
-- Upgrade pip3 as the default version is too old to handle the required deps: `pip3 install --upgrade`
-- Activate .venv if present then install pip deps: `pip3 install ansible setuptools setuptools-rust openstacksdk openshift pyyaml kubernetes`
+- Upgrade pip3 as the default version is too old to handle the required deps: `pip3 install pip --upgrade`
+- Activate .venv if present then install pip deps: `pip3 install ansible setuptools setuptools-rust pyyaml kubernetes`
 - Clone the repository and cd into it
 - Install requirements `ansible-galaxy collection install -r requirements.yml`
-- Obtain a copy of clouds.yaml for your project, place it in `~/.config/openstack/clouds.yaml` you may need to create the parent directory
-- Open the file and rename `openstack` to `jupyter-development` or `jupyter-prod`, you can have multiple sections in a single file. 
-- Insert your a password line below username with your password
-- Test using `openstack --os-cloud=jupyter-development coe cluster template list`, which will always return built-in templates
 
-### Recommended Setup
-
-The following is assumed:
-- You are using openstack with Magnum installed
-- You have a Core OS image available 
-- You are using Cinder as your storage, if not the PVC can be altered under the `deploy_jhub` role.
-- You can already deploy a Magnum cluster using the defaults provided. If not feel free to add / modify instance labels to "fix Magnum".
-- It's recommended to have a private mirror (such as Harbor) for Magnum containers. The docker rate limit can be quickly hit spinning up new clusters and autoscaling.
-
-It's **highly** recommended that you setup a dedicated project with a high number of volume instances; a volume is created per user so this can rapidly grow. By default each volume is only 1GB, so a sensible space quota is fine.
-
-
-
-## Deploying a cluster
-
-### Variables (`/playbooks/deploy_cluster.yml`)
-| Variable | Description | Defalut |
-| --------- | ---------- | ---------|
-| `release_version` and `cluster_name` | Combine to form cluster name | `"1-2"` and `"jupyter-{{ release_version }}"` |
-| `num_masters` | Number of master nodes. | `2` |
-| `num_workers` | Minimum number of worker nodes. | `1` |
-| `max_worker_nodes` | Maximum number of worker nodes. | `10` |
-| `max_gpu_nodes` | Maximum number of GPU nodes. The minimum number of GPU worker is always 1  | `4` |
-| `keypair_name` | Name for IAM keypair for managing this cluster. | `2` |
-| `master_flavor` | Flavor of master nodes | `2` |
-| `worker_flavor` | Flavor of worker nodes | `2` |
-| `setup_lb_to_master_nodes` | Set-up a lobalancer for SSH accessto master nodes | `false` |
-| `mirror_url` | mirror for docker container | `harbor.stfc.ac.uk/magnum_mirror/` |
-### Instruction
-
-- In `playbooks/deploy_cluster.yml` check the config
-- Pay attention to `max_worker_nodes` and `flavor`, as the flavor cannot be changed after creation
-- This will also optionally setup a load balancer called `<cluster_name>_in` with SSH access on the users behalf if enabled
-- Deploy with `ansible-playbook -i <name_of_inventory> playbooks/deploy_cluster.yml`
-- For example, to deploy to a development project `ansible-playbook -i dev_inventory/openstack.yml playbooks/deploy_cluster.yml`
-- The status of the cluster deployment can be monitored with `watch openstack coe cluster list` or on the web GUI
-- One deployed pull the config to your local machine with `openstack coe cluster config <cluster_name>`. This will copy a `config` file into your current directory
-- Export the kubectl config after the config command finishes
-- Check for kubectl connectivity `kubectl get nodes`
-- Check that all pods are created successfully with `kubectl get pods -n kube-system`
 ## GPU
-### Variables (`/playbooks/build_gpu_driver.yml`)
-| Variable | Description | Defalut |
-| --------- | ---------- | ---------|
-| `FEDORA_VERSION` | OS version of the Kubernetes Node (CoreOS for STFC cloud) | `32` |
-| `NVIDIA_DRIVER_VERSION` | Nvidia driver version. See [link](https://hub.docker.com/r/nvidia/driver/tags) | `460.32.03` |
-| `HARBOR_TAG` | Target repository for pushing the GPU driver image. | `"harbor.stfc.ac.uk/magnum_mirror/nvidia_driver:{{ NVIDIA_DRIVER_VERSION }}-fedora{{ FEDORA_VERSION }}"` |
-### Enabling GPU Workers
-- Edit `playbooks/build_gpu_driver.yml` to check the Nvidia driver and OS targetted
-- Run `ansible-playbook playbooks/build_gpu_driver.yml` to build and push the driver to the magnum mirror
-- In `playbooks/deploy_cluster.yml` check the configuration matches above and the desired outcome
-- If the cluster already exists comment out the init cluster step in `k8s_cluster/tasks_deploy_magnum_cluster`. Openstack will create a new cluster as this step is not idempotent.
-- Run `ansible-playbook playbooks/deploy_jhub.yml -i dev_inventory/openstack.yml`
-- In `kubectl get nodes` a new node will be deployed
-- The status of the Nvidia driver on the guest can be monitored with `kubectl get all -n gpu-operator-resources`
 
+- GPU drivers will automatically be pulled from the Nvidia NGC catalogue
+- Driver version is defined in playbooks/deploy_jhub.yml
 
-### Manual Cluster config fix for GPU Workers
-The cluster autoscaler must be informed how to scale these nodes:
-- Edit the deployment with `kubectl edit deploy/cluster-autoscaler -n kube-system`
-- Find the line with `1:n:default-worker` where n is the max number of workers and 1 is the minimum number
-- Insert another line below, taking care to have 3 dashes: `-nodes --1:n:gpu-worker` to enable scaling on GPU workers
-- Save, this should enable autoscaling on GPU instances and can be monitored with `kubectl logs deploy/cluster-autoscaler -n kube-system --follow`
-
-If you are seeing errors that the annotation `csi.volume.kubernetes.io/nodeid` is missing whilst trying to start an instance on a GPU node you need to manually adjust the CSI plugin:
-
-CSI plugins will not deploy on tainted nodes (e.g. GPU instances) preventing us from using Cinder shares. An [upstream fix](https://review.opendev.org/c/openstack/magnum/+/782527) has been backported to certain versions. This can easily be resolved too:
-
-- Run `kubectl edit daemonset/csi-cinder-nodeplugin -n kube-system`
-- Scroll down to the configuration for `csi-cinder-nodeplugin` it will look something like this:
-
-```yaml
-  name: csi-cinder-nodeplugin
-  namespace: kube-system
-  resourceVersion: "5800"
-  selfLink: /apis/apps/v1/namespaces/kube-system/daemonsets/csi-cinder-nodeplugin
-  uid: 5a9c87c4-d01c-4325-b388-4ee7d43e15a5
-spec:
-  revisionHistoryLimit: 10
-  selector:
-    matchLabels:
-      app: csi-cinder-nodeplugin
-  template:
-    metadata:
-      creationTimestamp: null
-      labels:
-        app: csi-cinder-nodeplugin
-    spec:
-      containers:
-      - args:
-```
-
-- Add the [following changes](https://github.com/kubernetes/cloud-provider-openstack/pull/1276/files#diff-c8af329d87fa66e42453db753cc7f9c7c25812d91c5276a55b9d4e1399a1b009R19) so that is now looks like:
-
-```yaml
-spec:
-  revisionHistoryLimit: 10
-  selector:
-    matchLabels:
-      app: csi-cinder-nodeplugin
-  template:
-    metadata:
-      creationTimestamp: null
-      labels:
-        app: csi-cinder-nodeplugin
-    spec:
-      tolerations:
-        - operator: Exists
-```
-
-This will now deploy `csi-cinder-nodeplugin` to all nodes regardless of taint. To verify you can check the number of desired pods, it should equal your total number of nodes in `kubectl get daemonset -n kube-system`
-
-### Priority Class for GPU-operator
-The Nvidia GPU Helm Chart will try to schedule pods with `system-node-critical` in namespaces outside of `kube-system`. Earlier version of K8s doesn't allow this. Therefore, a workaround is included with this notebook to create a high priority user PriorityClass for these pods.
 
 ## Kubectl Namespaces
 
-All components are installed in the `jhub` (or user-selected) namespace and the Prometheus-stack is deployed to the `prometheus` namespace. This means every command must:
+All components are installed in the user-selected namespace and the Prometheus-stack is deployed to the `prometheus` namespace. This means every command must:
 
 - Include `-n <namespace>` on every command
 - (Preferred) use [Kubectx and kubens](https://github.com/ahmetb/kubectx) and set the namespace for this session with `kubectl ns jhub`
@@ -230,66 +104,18 @@ The primary disadvantage of this, is both remembering to renew the certificate a
 
 A Kubernetes secret is used, instructions can be found [here](https://zero-to-jupyterhub.readthedocs.io/en/latest/administrator/security.html#specify-certificate-through-secret-resource)
 
-### Using Oauth Sign in (`config-oauth.yaml.template`)
-
-For short-term deployments, where a list of authorized users is suitable, simply use the native authenticator ( and see below.
-
-If you are using another OAuth provider please contact them for support.
-
-If you are using IRIS IAM the secrets must be generated for the config file as follows:
-
-- Visit [IRIS IAM](https://iris-iam.stfc.ac.uk/) and self-service client registration
-- Add a new client (or edit an existing one with secrets previously generated)
-- Ensure you fill out as many details as possible for production. These steps help users recognise OAuth phising attacks
-- Add `https://<domain>` and `https://<domain>/hub/spawn` to the allowed redirects
-- (E.g. `https://example.com` and `https://example.com/spawn`)
-- Under scopes untick everything except `openid` `preferred_username`, `profile` and `email`.
-- Save the generated ID/secrets. 
-- Take note of the **registration token**, this is not used in config but you will not be able to access / modify your token afterward without it.
-- Copy `config-oauth.yaml.template` to config.yaml and populate the file with the above details.
-
-#### Setting users / admin groups for Oauth
-
-By default the config template assumes the user will be using groups with Oauth to limit access to approved groups and assign admin privileges.
-
-Simply modify the `allowed_groups` and `admin_groups` contains the group names you intend to be allowed access and admin privileges respectively.
-
-To allow anyone who completes Oauth login access, simply remove all entries from both lists. This will also disable admin accounts too.
-
-### Using Native Authenticator (`config-native.yaml.template`)
-
-If your service is short lived (<1 month), then an alternative is to use the Native Authenticator. This is especially useful for running events where users won't have an IAM account (e.g. school outreach).
-
-In this mode anybody can sign up, however, before they can access the service their account most be approved by any of the pre-defined admin accounts.
-
-Note: This deployment is **not** suitable for long-term deployments; the hashed passwords are stored within the cluster which typically is not actively maintained after deployment. Instead invest the time to use OAuth or LDAP, so that your password hashes are stored on an actively maintained external service.
-
-To use the Native Authenticator:
-
-- Copy `config-native-auth.yaml.template` to `config.yaml`
-- Change the number and name of admin usernames as appropriate
-- Uncomment and fill allowed_user, which is a user name whitelist, if required
-- After service deployment you'll need to sign up as the admin user
-- The sign up page will state your account needs conformation, for an admin account you can now login directly
-
-**Important:** As admin account credentials are created via a 'sign up'. These must be registered immediately after creation to secure them against someone else registering them instead.
-
-To authorize users after they sign up navigate to `/hub/authorize` (e.g. https://example.com/hub/authorize ). Unfortunately, there is no button to access this page so the URL must be directly changed.
-
 ## Deploying Jupyter hub
 ### Variables (`/playbooks/deploy_jhub.yml`)
-| Variable | Description | Defalut |
+| Variable | Description | Default |
 | --------- | ---------- | ---------|
-| `storage_class_file` | Name of Kubernetes config file for StorageClass. (place the file in `/roles/deploy_jhub/files/` and edit the relevant section in  `/roles/deploy_jhub/files/{jhub_config_file_}`;  This repo includes a config file for Cinder Storage (Openstack) and Rancher Local-path) | `"cinder-kube-storage.yaml"` |
-| `jupyter_large_image_install_mode` | Helm have a 5 min. timeout on Kubernetes command. The Helm chart pull Jupyter Notebook images to cluster during Timeout can occur for larger images | `true` |
 | `jhub_deployed_name` | Helm name of JupyterHub. | `jupyterhub` |
 | `jhub_namespace` | Kubernetes Namespace for JupyterHub | `jupyterhub` |
-| `jhub_version` | Helm chart version for JupyterHub (Newer versions may require a more recent kubernetes version)  | `"0.11.1"` |
+| `jhub_version` | Helm chart version for JupyterHub (Newer versions may require a more recent kubernetes version)  | `"1.2.0"` |
 | `jhub_config_file` | Name of helm values file of JupyterHub (place the file in `/roles/deploy_jhub/files/`) | `2` |
 | `prometheus_deployed_name` | Helm name of Prometheus Stack | `prometheus` |
 | `prometheus_namespace` | Kubernetes Namespace for Prometheus Stack | `prometheus` |
 | `grafana_password` | Admin Password for Grafana. | `"temp_password"` |
-| `NVIDIA_DRIVER_VERSION` | This version needs have been built by running playbooks/build_gpu_driver.yml beforehand. By default, The repo is pointed towards STFC harbor. | `460.32.03` |
+| `NVIDIA_DRIVER_VERSION` | Image tag from the Nvidia NGC catalogue | `515.48.07` |
 
 ### Instructions
 
@@ -298,7 +124,7 @@ To authorize users after they sign up navigate to `/hub/authorize` (e.g. https:/
 - Whilst it's deploying go to Network -> Load Balancers, look for one labelled with `proxy_public`for JHub, it may take a minute to appear as images are pulled.
 - Take note of the 10.0.x.x IP, go to Floating IPs (FIP).
 - Associate your prepared FIP with matching DNS records to that whilst the load balancer is being created.
-- If Magnum managed to associate a random FIP before you disassociate and release. But this will happen as the final step of creating the load balancer if you haven't already.
+- If you do not associate a prepared FIP, Cluster API will associate a random FIP as the final step of creating the load balancer, which must be disassociated and released before your FIP can be associated.
 
 ### SSL Setup
 

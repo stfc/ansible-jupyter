@@ -1,8 +1,0 @@
-apiVersion: scheduling.k8s.io/v1
-kind: PriorityClass
-metadata:
-  name: nvidia-priority-class
-#this is the highest for user defined priority but kubernetes <1.17 will not allow non kube-system namespace to start pod with system-node-critical
-value: 1000000000
-globalDefault: false
-description: "This priority class should be used for nvidia service pods only."

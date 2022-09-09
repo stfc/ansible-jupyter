@@ -31,7 +31,7 @@ singleuser:
     dynamic:
       ## add storage class name here
       storageClass: "cinder-storage"
-      
+
   # Default profile, this is what the placeholders will use
   startTimeout: 1200 # seconds == 20 minutes
   cpu:
@@ -107,7 +107,7 @@ singleuser:
 
 hub:
   #remove login for metrics collection
-  authenticatePrometheus: false 
+  authenticatePrometheus: false
   config:
     Authenticator:
       # Whilst auto-login would be nice it dumps users at IRIS IAM with no warning

@@ -1,6 +1,4 @@
 collections:
-  - name: openstack.cloud
   # K8s deps
   - name: kubernetes.core
   - name: community.kubernetes
-  - name: cloud.common
