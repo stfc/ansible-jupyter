@@ -12,6 +12,7 @@ Provides a JupyterHub Service on an existing Openstack Cluster. This uses the he
   * [HTTPS Config](#https-config)
     + [Setting up DNS for Lets Encrypt](#setting-up-dns-for-lets-encrypt)
     + [Using existing TLS Certificate](#using-existing-tls-certificate)
+  * [Using LDAP Sign In (`config-ldap.yaml.template`)](#Using-LDAP-Sign-In-config-ldapyamltemplate)
 - [Deploying Jupyter hub](#deploying-jupyter-hub)
   * [Variables (`/playbooks/deploy_jhub.yml`)](#variables-playbooksdeploy_jhubyml)
   * [Instructions](#instructions)
@@ -29,6 +30,7 @@ Provides a JupyterHub Service on an existing Openstack Cluster. This uses the he
 
 ## Features
 
+- **(New) LDAP authentication**
 - **(New) Deploy Prometheus stack to monitor the cluster**
 - **(New) Deploy a pre-configured Grafana dashboard for monitoring GPU and JupyterHub**
 - **(New) Deploy Virtual Desktop environment**
@@ -103,6 +105,30 @@ Alternatively, if you already have an existing certificate and don't want to exp
 The primary disadvantage of this, is both remembering to renew the certificate annually and the associated downtime compared to the automatic Lets Encrypt method.
 
 A Kubernetes secret is used, instructions can be found [here](https://zero-to-jupyterhub.readthedocs.io/en/latest/administrator/security.html#specify-certificate-through-secret-resource)
+
+### Using LDAP Sign In (`config-ldap.yaml.template`)
+
+For short-term deployments, where a list of authorized users is suitable, simply use the native authenticator (see `config.yaml.template`).
+
+Instructions for setup:
+
+- The LDAP authenticator uses a server, such as a FreeIPA server, for authentication
+- Copy config-ldap.yaml.template to config.yaml and populate the file with the details described below
+- Enter your LDAP server address in `<server address>`
+- Enter the user search base in `<search base>`
+  * For FreeIPA, the form of this is based on the initial domain that IPA was configured with
+  * For example, a domain of stfc.ac.uk would require `user_search_base: "cn=users,cn=accounts,dc=stfc,dc=ac,dc=uk"`
+- Enter any admin users
+  * Further admins can be promoted by editing users on JupyterHub
+
+Notes:
+
+- Users cannot login to JupyterHub without an account on the LDAP server
+- Users must be managed on both JupyterHub and the LDAP server separately. For example:
+  * Creating an account on the LDAP server does not create a JupyterHub account, and vice versa (`open_signup` and `allowed_users` are therefore invalid options)
+  * Similarly, deleting users on the LDAP server does not delete JupyterHub users, and vice versa
+  * Admin privileges on the LDAP server are unrelated to JupyterHub admin privileges
+- Secondary LDAP servers are not currently supported
 
 ## Deploying Jupyter hub
 ### Variables (`/playbooks/deploy_jhub.yml`)
