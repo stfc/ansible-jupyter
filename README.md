@@ -22,6 +22,10 @@ Provides a JupyterHub Service on an existing Openstack Cluster. This uses the he
   * [SSL Setup](#ssl-setup)
   * [Note on Renewal Limits](#note-on-renewal-limits)
   * [Longhorn](#longhorn)
+- [Deploying DaskHub](#deploying-daskhub)
+  * [Variables (`/playbooks/deploy_daskhub.yml`)](#variables-playbooksdeploy_daskhubyml)
+  * [Instructions](#instructions)
+  * [Troubleshooting](#troubleshooting)
 - [Prometheus Stack](#prometheus-stack)
   * [Accessing Grafana and Prometheus dashboard](#accessing-grafana-and-prometheus-dashboard)
 - [Virtual Desktop](#virtual-desktop)
@@ -34,6 +38,7 @@ Provides a JupyterHub Service on an existing Openstack Cluster. This uses the he
 
 ## Features
 
+- **(New) Deploy DaskHub**
 - **(New) Longhorn support**
 - **(New) LDAP authentication**
 - **(New) Deploy Prometheus stack to monitor the cluster**
@@ -150,11 +155,14 @@ The NFS server IP address must be entered in `/roles/deploy_jhub/files/nfs-pv.ya
 ### Variables (`/playbooks/deploy_jhub.yml`)
 | Variable | Description | Default |
 | --------- | ---------- | ---------|
-| `jhub_deployed_name` | Helm name of JupyterHub. | `jupyterhub` |
-| `jhub_namespace` | Kubernetes Namespace for JupyterHub | `jupyterhub` |
-| `jhub_version` | Helm chart version for JupyterHub (Newer versions may require a more recent kubernetes version)  | `"1.2.0"` |
-| `jhub_config_file` | Name of helm values file of JupyterHub (place the file in `/roles/deploy_jhub/files/`) | `"config.yaml"` |
-| `jhub_cluster_name` | Name of JupyterHub cluster used in load balancer names | `jupyterhub_cluster` |
+| `hub_deployed_name` | Helm name of JupyterHub. | `jupyterhub` |
+| `hub_namespace` | Kubernetes Namespace for JupyterHub | `jupyterhub` |
+| `hub_version` | Helm chart version for JupyterHub (Newer versions may require a more recent kubernetes version)  | `"1.2.0"` |
+| `hub_config_file` | Name of helm values file of JupyterHub (place the file in `/roles/deploy_jhub/files/`) | `../deploy_jhub/files/config.yaml` |
+| `hub_cluster_name` | Name of JupyterHub cluster used in load balancer names | `jupyterhub_cluster` |
+| `hub_repo_name` | Name of repository for JupyterHub (place the file in `/roles/deploy_jhub/files/`) | `jupyterhub` |
+| `hub_repo_url` | Name of helm chart  URL for JupyterHub (place the file in `/roles/deploy_jhub/files/`) | `https://jupyterhub.github.io/helm-chart/` |
+| `hub_chart_ref` | Name of chart reference for JupyterHub (place the file in `/roles/deploy_jhub/files/`) | `jupyterhub/jupyterhub` |
 | `prometheus_deployed_name` | Helm name of Prometheus Stack | `prometheus` |
 | `prometheus_namespace` | Kubernetes Namespace for Prometheus Stack | `prometheus` |
 | `grafana_password` | Admin Password for Grafana. | `"temp_password"` |
@@ -199,6 +207,43 @@ The currently issued certificate(s) can be viewed at: https://crt.sh/
 Longhorn's configuration is defined by the `release_values` in `roles/deploy_jhub/tasks/main.yml`. By default, this creates a load balancer for the UI labelled `longhorn-frontend`, which must be associated with a prepared FIP, as described for JupyterHub's `proxy_public` load balancer.
 
 If you are required to uninstall and reinstall Longhorn, is may be necessary to manually delete the load balacer on OpenStack and the service (`kubectl get services -n longhorn-system` will list these). You must then restart the OpenStack controller manager pods before a new Longhorn load balancer can be created successfully.
+
+## Deploying DaskHub
+### Variables (`/playbooks/deploy_daskhub.yml`)
+| Variable | Description | Default |
+| --------- | ---------- | ---------|
+| `hub_deployed_name` | Helm name of DaskHub. | `daskhub` |
+| `hub_namespace` | Kubernetes Namespace for DaskHub | `daskhub` |
+| `hub_version` | Helm chart version for DaskHub (Newer versions may require a more recent kubernetes version)  | `"2022.8.1"` |
+| `hub_config_file` | Name of helm values file of DaskHub (place the file in `/roles/deploy_daskhub/files/`) | `../deploy_daskhub/files/config.yaml` |
+| `hub_cluster_name` | Name of DaskHub cluster used in load balancer names | `daskhub_cluster` |
+| `hub_repo_name` | Name of repository for DaskHub (place the file in `/roles/deploy_jhub/files/`) | `dask` |
+| `hub_repo_url` | Name of helm chart  URL for DaskHub (place the file in `/roles/deploy_jhub/files/`) | `https://helm.dask.org/` |
+| `hub_chart_ref` | Name of chart reference for DaskHub (place the file in `/roles/deploy_jhub/files/`) | `dask/daskhub` |
+| `prometheus_deployed_name` | Helm name of Prometheus Stack | `prometheus` |
+| `prometheus_namespace` | Kubernetes Namespace for Prometheus Stack | `prometheus` |
+| `grafana_password` | Admin Password for Grafana. | `"temp_password"` |
+| `NVIDIA_DRIVER_VERSION` | Image tag from the Nvidia NGC catalogue | `515.48.07` |
+
+### Instructions
+
+Deploying DaskHub is similar to deploying JupyterHub, with a few minor differences:
+
+- An `apiToken` must be created in your `config.yaml`, similar to the `secretToken`
+  * This token must entered in two places: `hub: services: dask-gateway` and `dask-gateway: gateway: auth: jupyterhub`
+- Two load balancers will be created: `proxy_public` and `dask-gateway`, for JupyterHub and Dask Gateway respectively
+  * A floating IPs must be associated with each of these load balancers while they are being created
+- Notebook images used must include dask-gateway
+
+### Troubleshooting
+
+- If you uninstall DaskHub, make sure the load balancers have been deleted from OpenStack, then ensure neither appears when you run `kubectl get service -n daskhub`
+  * If either is still listed, delete the service e.g. `kubectl delete service -n daskhub proxy-public`
+  * If the load balancer does not delete, you may need to patch the service e.g. `kubectl patch service -n daskhub proxy-public -p '{"metadata": {"finalizers": null}}'`
+  * You must then restart the OpenStack controller managers e.g. `kubectl delete pod -n kube-system openstack-cloud-controller-manager-xxxxx`
+- Duplicate ports may be listed when attempting to associate a floating IP to each load balancer
+  * Try to associate one of the duplicates and check the load balancer's IP appears under `Mapped Fixed IP Address`
+  * If it does not, disassociate and retry with a different duplicate
 
 ## Prometheus Stack
 The Prometheus-Grafana stack is deployed automatically when deploying JupyterHub. user can set password using the `grafana_password` variable.
