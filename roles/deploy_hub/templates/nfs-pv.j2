@@ -2,7 +2,7 @@ apiVersion: v1
 kind: PersistentVolume
 metadata:
   name: training-materials
-  namespace: jupyterhub
+  namespace: {{ hub_namespace }}
 spec:
   capacity:
     storage: 1Ti
