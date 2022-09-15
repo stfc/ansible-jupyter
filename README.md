@@ -111,7 +111,7 @@ A Kubernetes secret is used, instructions can be found [here](https://zero-to-ju
 | `jhub_deployed_name` | Helm name of JupyterHub. | `jupyterhub` |
 | `jhub_namespace` | Kubernetes Namespace for JupyterHub | `jupyterhub` |
 | `jhub_version` | Helm chart version for JupyterHub (Newer versions may require a more recent kubernetes version)  | `"1.2.0"` |
-| `jhub_config_file` | Name of helm values file of JupyterHub (place the file in `/roles/deploy_jhub/files/`) | `2` |
+| `jhub_config_file` | Name of helm values file of JupyterHub (place the file in `/roles/deploy_jhub/files/`) | `"config.yaml"` |
 | `prometheus_deployed_name` | Helm name of Prometheus Stack | `prometheus` |
 | `prometheus_namespace` | Kubernetes Namespace for Prometheus Stack | `prometheus` |
 | `grafana_password` | Admin Password for Grafana. | `"temp_password"` |
