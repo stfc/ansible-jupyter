@@ -9,5 +9,5 @@ spec:
   accessModes:
     - ReadOnlyMany
   nfs:
-    server: 172.16.101.240
+    server: <NFS Server IP>
     path: "/var/training-materials"

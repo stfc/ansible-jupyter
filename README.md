@@ -8,14 +8,15 @@ Provides a JupyterHub Service on an existing Openstack Cluster. This uses the he
   * [Local Environment Setup](#local-environment-setup)
 - [GPU](#gpu)
 - [Kubectl Namespaces](#kubectl-namespaces)
-- [Jupyter Hub Config](#jupyter-hub-config)
+- [JupyterHub Config](#jupyterhub-config)
   * [HTTPS Config](#https-config)
     + [Setting up DNS for Lets Encrypt](#setting-up-dns-for-lets-encrypt)
     + [Using existing TLS Certificate](#using-existing-tls-certificate)
   * [Using LDAP Sign In (`config-ldap.yaml.template`)](#Using-LDAP-Sign-In-config-ldapyamltemplate)
     + [Setting up LDAP Authentication](#setting-up-ldap-authentication)
     + [Creating FreeIPA accounts](#creating-freeipa-accounts)
-- [Deploying Jupyter hub](#deploying-jupyter-hub)
+  * [Training Materials](#Training-materials)
+- [Deploying JupyterHub](#deploying-jupyterhub)
   * [Variables (`/playbooks/deploy_jhub.yml`)](#variables-playbooksdeploy_jhubyml)
   * [Instructions](#instructions)
   * [SSL Setup](#ssl-setup)
@@ -80,7 +81,7 @@ All components are installed in the user-selected namespace and the Prometheus-s
 
 All subsequent Kubernetes commands will omit the namespace for brevity.
 
-## Jupyter Hub Config
+## JupyterHub Config
 
 - Ensure that the terminal Ansible will run in can access the correct cluster (`kubectl get no`).
 - Check the config in `playbooks/deploy_jhub.yml`.
@@ -132,7 +133,6 @@ Notes:
   * Admin privileges on the LDAP server are unrelated to JupyterHub admin privileges
 - Secondary LDAP servers are not currently supported
 
-
 #### Creating FreeIPA accounts
 
 Scripts are avaiable in `/scripts` to create (`create_users.py`) and delete (`delete_users.py`) groups of FreeIPA users. The configuration for your FreeIPA server must be entered in `freeipa_config.yml` within the same directory, and the `python_freeipa` package must be installed.
@@ -141,8 +141,12 @@ For example, to create 20 users of the form `jupyter-user-x` and save the userna
 
 `python3 scripts/create_users.py --basename "jupyter-user" --first_index 1 --last_index 20 > users.txt`
 
+### Training Materials
 
-## Deploying Jupyter hub
+The NFS server IP address must be entered in `/roles/deploy_jhub/files/nfs-pv.yaml`
+
+
+## Deploying JupyterHub
 ### Variables (`/playbooks/deploy_jhub.yml`)
 | Variable | Description | Default |
 | --------- | ---------- | ---------|
