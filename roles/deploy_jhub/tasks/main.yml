@@ -1,9 +1,11 @@
-- name: Download Openstack Controller Repo
-  ansible.builtin.git:
-    repo: "https://github.com/kubernetes/cloud-provider-openstack.git"
-    dest: "/tmp/cloud-provider-openstack"
-    version: "release-1.24"
-    update: true # Automatically pull bug-fixes in
+- name: Create OpenStack Controller files
+  ansible.builtin.template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  with_items:
+    - {src: "{{ role_path }}/templates/cloud-provider-openstack/cloud-controller-manager-roles.j2", dest: "/tmp/cloud-provider-openstack/cloud-controller-manager-roles.yaml"}
+    - {src: "{{ role_path }}/templates/cloud-provider-openstack/cloud-controller-manager-role-bindings.j2", dest: "/tmp/cloud-provider-openstack/cloud-controller-manager-role-bindings.yaml"}
+    - {src: "{{ role_path }}/templates/cloud-provider-openstack/openstack-cloud-controller-manager-ds.j2", dest: "/tmp/cloud-provider-openstack/openstack-cloud-controller-manager-ds.yaml"}
 
 - name: Install Openstack Controller Manager
   kubernetes.core.k8s:
@@ -11,9 +13,9 @@
     src: "{{ item }}"
     namespace: kube-system
   with_items:
-    - "/tmp/cloud-provider-openstack/manifests/controller-manager/cloud-controller-manager-roles.yaml"
-    - "/tmp/cloud-provider-openstack/manifests/controller-manager/cloud-controller-manager-role-bindings.yaml"
-    - "/tmp/cloud-provider-openstack/manifests/controller-manager/openstack-cloud-controller-manager-ds.yaml"
+    - "/tmp/cloud-provider-openstack/cloud-controller-manager-roles.yaml"
+    - "/tmp/cloud-provider-openstack/cloud-controller-manager-role-bindings.yaml"
+    - "/tmp/cloud-provider-openstack/openstack-cloud-controller-manager-ds.yaml"
 
 - name: Create Longhorn namespace
   kubernetes.core.k8s:

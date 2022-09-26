@@ -153,6 +153,7 @@ The NFS server IP address must be entered in `/roles/deploy_jhub/files/nfs-pv.ya
 | `jhub_namespace` | Kubernetes Namespace for JupyterHub | `jupyterhub` |
 | `jhub_version` | Helm chart version for JupyterHub (Newer versions may require a more recent kubernetes version)  | `"1.2.0"` |
 | `jhub_config_file` | Name of helm values file of JupyterHub (place the file in `/roles/deploy_jhub/files/`) | `"config.yaml"` |
+| `jhub_cluster_name` | Name of JupyterHub cluster used in load balancer names | `jupyterhub_cluster` |
 | `prometheus_deployed_name` | Helm name of Prometheus Stack | `prometheus` |
 | `prometheus_namespace` | Kubernetes Namespace for Prometheus Stack | `prometheus` |
 | `grafana_password` | Admin Password for Grafana. | `"temp_password"` |

@@ -11,6 +11,8 @@
     jhub_version: "1.2.0"
     # config file for JupyterHub helm chart (in "/roles/deploy_jhub/files")
     jhub_config_file: "config.yaml"
+    # Name of JupyterHub cluster used in load balancer names
+    jhub_cluster_name: jupyterhub_cluster
 
     # Helm name of the prometheus service
     prometheus_deployed_name: prometheus
