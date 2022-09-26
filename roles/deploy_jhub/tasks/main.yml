@@ -53,6 +53,9 @@
       service:
         ui:
           type: LoadBalancer
+      persistence:
+        defaultClassReplicaCount: 3
+        defaultDataLocality: disabled
 
 - name: Create the working namespace
   kubernetes.core.k8s:
