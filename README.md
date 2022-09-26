@@ -13,6 +13,8 @@ Provides a JupyterHub Service on an existing Openstack Cluster. This uses the he
     + [Setting up DNS for Lets Encrypt](#setting-up-dns-for-lets-encrypt)
     + [Using existing TLS Certificate](#using-existing-tls-certificate)
   * [Using LDAP Sign In (`config-ldap.yaml.template`)](#Using-LDAP-Sign-In-config-ldapyamltemplate)
+    + [Setting up LDAP Authentication](#setting-up-ldap-authentication)
+    + [Creating FreeIPA accounts](#creating-freeipa-accounts)
 - [Deploying Jupyter hub](#deploying-jupyter-hub)
   * [Variables (`/playbooks/deploy_jhub.yml`)](#variables-playbooksdeploy_jhubyml)
   * [Instructions](#instructions)
@@ -110,7 +112,7 @@ A Kubernetes secret is used, instructions can be found [here](https://zero-to-ju
 
 For short-term deployments, where a list of authorized users is suitable, simply use the native authenticator (see `config.yaml.template`).
 
-Instructions for setup:
+#### Setting up LDAP Authentication
 
 - The LDAP authenticator uses a server, such as a FreeIPA server, for authentication
 - Copy config-ldap.yaml.template to config.yaml and populate the file with the details described below
@@ -129,6 +131,16 @@ Notes:
   * Similarly, deleting users on the LDAP server does not delete JupyterHub users, and vice versa
   * Admin privileges on the LDAP server are unrelated to JupyterHub admin privileges
 - Secondary LDAP servers are not currently supported
+
+
+#### Creating FreeIPA accounts
+
+Scripts are avaiable in `/scripts` to create (`create_users.py`) and delete (`delete_users.py`) groups of FreeIPA users. The configuration for your FreeIPA server must be entered in `freeipa_config.yml` within the same directory, and the `python_freeipa` package must be installed.
+
+For example, to create 20 users of the form `jupyter-user-x` and save the usernames and passwords in a text file, run:
+
+`python3 scripts/create_users.py --basename "jupyter-user" --first_index 1 --last_index 20 > users.txt`
+
 
 ## Deploying Jupyter hub
 ### Variables (`/playbooks/deploy_jhub.yml`)
