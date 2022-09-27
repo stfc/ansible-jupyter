@@ -21,6 +21,7 @@ Provides a JupyterHub Service on an existing Openstack Cluster. This uses the he
   * [Instructions](#instructions)
   * [SSL Setup](#ssl-setup)
   * [Note on Renewal Limits](#note-on-renewal-limits)
+  * [Longhorn](#longhorn)
 - [Prometheus Stack](#prometheus-stack)
   * [Accessing Grafana and Prometheus dashboard](#accessing-grafana-and-prometheus-dashboard)
 - [Virtual Desktop](#virtual-desktop)
@@ -192,6 +193,12 @@ A maximum of 5 certificates will be issued to a set of domain names per week (on
 However, `helm uninstall jhub` will delete the certificate counting towards another when redeployed.
 
 The currently issued certificate(s) can be viewed at: https://crt.sh/
+
+### Longhorn
+
+Longhorn's configuration is defined by the `release_values` in `roles/deploy_jhub/tasks/main.yml`. By default, this creates a load balancer for the UI labelled `longhorn-frontend`, which must be associated with a prepared FIP, as described for JupyterHub's `proxy_public` load balancer.
+
+If you are required to uninstall and reinstall Longhorn, is may be necessary to manually delete the load balacer on OpenStack and the service (`kubectl get services -n longhorn-system` will list these). You must then restart the OpenStack controller manager pods before a new Longhorn load balancer can be created successfully.
 
 ## Prometheus Stack
 The Prometheus-Grafana stack is deployed automatically when deploying JupyterHub. user can set password using the `grafana_password` variable.
