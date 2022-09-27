@@ -36,9 +36,9 @@ jupyterhub:
           mountPath: /mnt/materials
 
       type: dynamic
-      capacity: 10Gi # 1GB is the minimum Cinder will serve
+      capacity: 10Gi
       dynamic:
-        storageClass: csi-cinder-sc-delete
+        storageClass: longhorn
 
     # Default profile, this is what the placeholders will use
     startTimeout: 1200 # seconds == 20 minutes
