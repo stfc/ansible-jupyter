@@ -27,10 +27,10 @@ singleuser:
         mountPath: /dev/shm
 
     type: dynamic
-    capacity: 1Gi # 1GB is the minimum Cinder will serve
+    capacity: 1Gi
     dynamic:
       ## add storage class name here
-      storageClass: "cinder-storage"
+      storageClass: longhorn
 
   # Default profile, this is what the placeholders will use
   startTimeout: 1200 # seconds == 20 minutes
