@@ -1,3 +1,4 @@
+# From https://github.com/kubernetes/cloud-provider-openstack/blob/release-1.25/manifests/controller-manager/openstack-cloud-controller-manager-ds.yaml
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -38,7 +39,7 @@ spec:
       serviceAccountName: cloud-controller-manager
       containers:
         - name: openstack-cloud-controller-manager
-          image: docker.io/k8scloudprovider/openstack-cloud-controller-manager:latest
+          image: docker.io/k8scloudprovider/openstack-cloud-controller-manager:v1.25.0
           args:
             - /bin/openstack-cloud-controller-manager
             - --v=1
