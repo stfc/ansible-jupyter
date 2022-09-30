@@ -61,35 +61,42 @@
 
 - name: Create the working namespace
   kubernetes.core.k8s:
-    name: "{{ jhub_namespace }}"
+    name: "{{ hub_namespace }}"
     kind: Namespace
     state: present
+
+- name: Create NFS yaml files
+  ansible.builtin.template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  with_items:
+    - {src: "{{ role_path }}/templates/nfs-pvc.j2", dest: "/tmp/nfs-pvc.yaml"}
+    - {src: "{{ role_path }}/templates/nfs-pv.j2", dest: "/tmp/nfs-pv.yaml"}
 
 - name: Enable the training materials NFS share
   kubernetes.core.k8s:
     state: present
     src: "{{ item }}"
-    namespace: "{{ jhub_namespace }}"
+    namespace: "{{ hub_namespace }}"
   with_items:
-    - "{{ role_path }}/files/nfs-pvc.yaml"
-    - "{{ role_path }}/files/nfs-pv.yaml"
+    - "/tmp/nfs-pvc.yaml"
+    - "/tmp/nfs-pv.yaml"
 
-- name: Install jhub helm repo
+- name: Install hub helm repo
   kubernetes.core.helm_repository:
-    name: jupyterhub
-    repo_url: https://jupyterhub.github.io/helm-chart/
+    name: "{{ hub_repo_name }}"
+    repo_url: "{{ hub_repo_url }}"
 
-- name: Install pre-set version of Jhub. This may take up to 25m to pull various images...
+- name: Install pre-set version of hub. This may take up to 25m to pull various images...
   kubernetes.core.helm:
-    chart_ref: jupyterhub/jupyterhub
-    create_namespace: yes
+    chart_ref: "{{ hub_chart_ref }}"
     update_repo_cache: yes
     # Pulled from default
-    name: "{{ jhub_deployed_name }}"
-    chart_version: "{{ jhub_version }}"
-    release_namespace: "{{ jhub_namespace }}"
+    name: "{{ hub_deployed_name }}"
+    chart_version: "{{ hub_version }}"
+    release_namespace: "{{ hub_namespace }}"
     values_files:
-      - "{{ role_path }}/files/{{ jhub_config_file }}"
+      - "{{ role_path }}/{{ hub_config_file }}"
     timeout: "25m"
 
 - name: Create namespace for Nvidia components
