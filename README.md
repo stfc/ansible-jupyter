@@ -25,6 +25,7 @@ Provides a JupyterHub Service on an existing Openstack Cluster. This uses the he
 - [Deploying DaskHub](#deploying-daskhub)
   * [Variables (`/playbooks/deploy_daskhub.yml`)](#variables-playbooksdeploy_daskhubyml)
   * [Instructions](#instructions)
+  * [GPUs](#gpus)
   * [Troubleshooting](#troubleshooting)
 - [Prometheus Stack](#prometheus-stack)
   * [Accessing Grafana and Prometheus dashboard](#accessing-grafana-and-prometheus-dashboard)
@@ -234,6 +235,12 @@ Deploying DaskHub is similar to deploying JupyterHub, with a few minor differenc
 - Two load balancers will be created: `proxy_public` and `dask-gateway`, for JupyterHub and Dask Gateway respectively
   * A floating IPs must be associated with each of these load balancers while they are being created
 - Notebook images used must include dask-gateway
+
+### GPUs
+
+- A template `config.yaml` can be found in `roles/deploy_daskhub/config-gpu.yaml.template`
+- Ensure that the image used contains both the `dask_gateway` and `dask_cuda` packages, and that it matches in both locations in `config.yaml`
+- Ensure that the GPU operator has been successfully installed using `kubectl get pods -n gpu-operator`
 
 ### Troubleshooting
 
