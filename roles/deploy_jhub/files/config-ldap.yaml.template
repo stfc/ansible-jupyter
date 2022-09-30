@@ -16,6 +16,9 @@ singleuser:
   # Use new UI by default as the old UI is being deprecated
   #  defaultUrl: "/lab"
   defaultUrl: "/lab"
+  extraEnv:
+    JUPYTERHUB_ACTIVITY_INTERVAL: "3600"
+  events: false
 
   storage:
     # Required for PyTorch
@@ -38,7 +41,7 @@ singleuser:
       storageClass: longhorn
 
   # Default profile, this is what the placeholders will use
-  startTimeout: 1200 # seconds == 20 minutes
+  startTimeout: 3600 # seconds == 60 minutes
   cpu:
     limit: 12
     guarantee: 8
@@ -75,6 +78,15 @@ hub:
         - example-admin
     JupyterHub:
       authenticator_class: ldapauthenticator.LDAPAuthenticator
+  consecutiveFailureLimit: 0
+  extraConfig:
+    myConfig: |
+      c.JupyterHub.activity_resolution = 6000
+      c.JupyterHub.last_activity_interval = 300
+      c.JupyterHub.init_spawners_timeout = 1
+      c.JupyterHub.concurrent_spawn_limit = 2000
+      c.KubeSpawner.k8s_api_threadpool_workers = c.JupyterHub.concurrent_spawn_limit
+      c.KubeSpawner.http_timeout = 60
 
 scheduling:
   # Try to pack users tightly rather than spinning up one node per user
@@ -92,5 +104,6 @@ scheduling:
 
 cull:
   enabled: true
-  timeout: 86400 # seconds == 1 day
-  every: 300 # 5 minutes
+  timeout: 432000 # seconds == 5 day
+  every: 3600 # Run once an hour instead of every 10 minutes
+  concurrency: 1
