@@ -16,6 +16,8 @@ jupyterhub:
     defaultUrl: "/lab"
     extraEnv:
       DASK_GATEWAY__CLUSTER__OPTIONS__IMAGE: '{JUPYTER_IMAGE_SPEC}'
+      JUPYTERHUB_ACTIVITY_INTERVAL: "3600"
+    events: false
     image:
       name: <Image>  # Image to use for singleuser environment. Must include dask-gateway.
       tag: <Tag>
@@ -41,7 +43,7 @@ jupyterhub:
         storageClass: longhorn
 
     # Default profile, this is what the placeholders will use
-    startTimeout: 1200 # seconds == 20 minutes
+   startTimeout: 3600 # seconds == 60 minutes
     cpu:
       limit: 12
       guarantee: 1
@@ -76,7 +78,15 @@ jupyterhub:
         # Uncomment allowed_users and insert the list of user names allowed to sign-up using the same format as above, if required.
       JupyterHub:
         authenticator_class: nativeauthenticator.NativeAuthenticator
+    consecutiveFailureLimit: 0
     extraConfig:
+      myConfig: |
+        c.JupyterHub.activity_resolution = 6000
+        c.JupyterHub.last_activity_interval = 300
+        c.JupyterHub.init_spawners_timeout = 1
+        c.JupyterHub.concurrent_spawn_limit = 2000
+        c.KubeSpawner.k8s_api_threadpool_workers = c.JupyterHub.concurrent_spawn_limit
+        c.KubeSpawner.http_timeout = 60
       # Register Dask Gateway service and setup singleuser environment.
       # From https://github.com/dask/helm-chart/blob/main/daskhub/values.yaml
       00-add-dask-gateway-values: |
@@ -132,8 +142,9 @@ jupyterhub:
 
   cull:
     enabled: true
-    timeout: 86400 # seconds == 1 day
-    every: 300 # 5 minutes
+    timeout: 432000 # seconds == 5 day
+    every: 3600 # Run once an hour instead of every 10 minutes
+    concurrency: 1
 
 dask-gateway:
   enabled: true  # Enabling dask-gateway will install Dask Gateway as a dependency.
