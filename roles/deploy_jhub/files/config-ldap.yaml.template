@@ -11,6 +11,8 @@ proxy:
       contactEmail: <Not Set>
   # This can be generated with `openssl rand -hex 32`
   secretToken: <Not Set>
+  service:
+    loadBalancerIP: <Load Balancer FIP>
 
 singleuser:
   # Use new UI by default as the old UI is being deprecated
