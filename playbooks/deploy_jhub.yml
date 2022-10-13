@@ -24,6 +24,8 @@
     hub_repo_url: https://jupyterhub.github.io/helm-chart/
     # Chart reference for JupyterHub
     hub_chart_ref: jupyterhub/jupyterhub
+    # If the NFS share is mounted the NFS IP must be populated in roles/deploy_hub/templates/nfs-pv.yaml
+    mount_nfs_share: false
 
     # Helm name of the prometheus service
     prometheus_deployed_name: prometheus

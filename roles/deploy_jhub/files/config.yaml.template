@@ -26,14 +26,14 @@ singleuser:
       - name: shm-volume
         emptyDir:
           medium: Memory
-      - name: training-materials
-        persistentVolumeClaim:
-          claimName: training-materials
+      # - name: training-materials
+      #   persistentVolumeClaim:
+      #     claimName: training-materials
     extraVolumeMounts:
       - name: shm-volume
         mountPath: /dev/shm
-      - name: training-materials
-        mountPath: /mnt/materials
+      # - name: training-materials
+      #   mountPath: /mnt/materials
 
     type: dynamic
     capacity: 10Gi

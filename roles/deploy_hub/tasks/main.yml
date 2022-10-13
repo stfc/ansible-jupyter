@@ -72,6 +72,7 @@
   with_items:
     - {src: "{{ role_path }}/templates/nfs-pvc.j2", dest: "/tmp/nfs-pvc.yaml"}
     - {src: "{{ role_path }}/templates/nfs-pv.j2", dest: "/tmp/nfs-pv.yaml"}
+  when: mount_nfs_share
 
 - name: Enable the training materials NFS share
   kubernetes.core.k8s:
