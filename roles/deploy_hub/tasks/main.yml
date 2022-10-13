@@ -1,3 +1,8 @@
+- name: Create working directory for Openstack Controller Files
+  file:
+    state: directory
+    path: /tmp/cloud-provider-openstack
+
 - name: Create OpenStack Controller files
   ansible.builtin.template:
     src: "{{ item.src }}"
