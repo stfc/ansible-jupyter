@@ -1,22 +1,3 @@
-- name: Create OpenStack Controller files
-  ansible.builtin.template:
-    src: "{{ item.src }}"
-    dest: "{{ item.dest }}"
-  with_items:
-    - {src: "{{ role_path }}/templates/cloud-provider-openstack/cloud-controller-manager-roles.j2", dest: "/tmp/cloud-provider-openstack/cloud-controller-manager-roles.yaml"}
-    - {src: "{{ role_path }}/templates/cloud-provider-openstack/cloud-controller-manager-role-bindings.j2", dest: "/tmp/cloud-provider-openstack/cloud-controller-manager-role-bindings.yaml"}
-    - {src: "{{ role_path }}/templates/cloud-provider-openstack/openstack-cloud-controller-manager-ds.j2", dest: "/tmp/cloud-provider-openstack/openstack-cloud-controller-manager-ds.yaml"}
-
-- name: Install Openstack Controller Manager
-  kubernetes.core.k8s:
-    state: present
-    src: "{{ item }}"
-    namespace: kube-system
-  with_items:
-    - "/tmp/cloud-provider-openstack/cloud-controller-manager-roles.yaml"
-    - "/tmp/cloud-provider-openstack/cloud-controller-manager-role-bindings.yaml"
-    - "/tmp/cloud-provider-openstack/openstack-cloud-controller-manager-ds.yaml"
-
 - name: Create Longhorn namespace
   kubernetes.core.k8s:
     name: longhorn-system
@@ -98,29 +79,3 @@
     values_files:
       - "{{ role_path }}/{{ hub_config_file }}"
     timeout: "25m"
-
-- name: Create namespace for Nvidia components
-  kubernetes.core.k8s:
-    name: "{{ item }}"
-    kind: Namespace
-    state: present
-  with_items:
-    - gpu-operator
-
-- name: Install Nvidia GPU Operator repo
-  kubernetes.core.helm_repository:
-    name: nvidia
-    repo_url: https://nvidia.github.io/gpu-operator
-
-- name: Install GPU Operator, pointing to own driver
-  kubernetes.core.helm:
-    chart_ref: nvidia/gpu-operator
-    update_repo_cache: yes
-    chart_version: "1.11.1"
-    name: gpu-operator
-    release_namespace: gpu-operator
-    release_values:
-      driver:
-        repository: "nvcr.io/nvidia"
-        image: "driver"
-        version: "{{ NVIDIA_DRIVER_VERSION }}"
