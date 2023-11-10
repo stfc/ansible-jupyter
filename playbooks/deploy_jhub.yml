@@ -9,7 +9,7 @@
     NVIDIA_DRIVER_VERSION: 515.48.07
 
     # Helm chart version for Jhub (newer version may require newer kubernetes version >=1.17)
-    hub_version: "1.2.0"
+    hub_version: "3.1.0"
     # Name of JupyterHub cluster used in load balancer names
     hub_cluster_name: jupyterhub_cluster
     # K8s namespace
