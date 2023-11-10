@@ -60,22 +60,36 @@ Provides a JupyterHub Service on an existing Openstack Cluster. This uses the he
 - Some metrics can't be selected by node name in Grafana dashboard as it requires a reverse DNS.
 
 ## Requirements
+The following assumes you have an Ubuntu 20.04 machine with `pip3`, `python3` and `python3-venv` already installed.
 
-- Ansible ([Installing Ansible — Ansible Documentation](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html))
+
+- Ansible ([Installing Ansible — Ansible Documentation](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html)) - this is installed using `pip` in `py-requirements.txt`
 - Helm 3 ([Installing Helm](https://helm.sh/docs/intro/install/))
 - kubectl ([Install Tools | Kubernetes](https://kubernetes.io/docs/tasks/tools/))
-- Python 3
-  - `ansible, kubernetes`
+
+Helm and kubectl can be installed using snap:
+
+```bash
+sudo apt-get update && sudo apt-get install -y snapd
+export PATH=$PATH:/snap/bin
+sudo snap install kubectl --classic
+sudo snap install helm --classic
+```
+
 ### Local Environment Setup
-- Upgrade pip3 as the default version is too old to handle the required deps: `pip3 install pip --upgrade`
-- Activate .venv if present then install pip deps: `pip3 install ansible setuptools setuptools-rust pyyaml kubernetes`
-- Clone the repository and cd into it
+
+- Upgrade `pip3` using `pip3 install pip --upgrade`
+- Create a virtual environment `venv` using `python3 -m venv venv`
+- Activate `venv`
+- Install the python dependencies: `pip3 install -r py-requirements.txt`
+- If you get an error about the version of setuptools, upgrade it manually using `pip3 install setuptools --upgrade`
+- Clone this repository and `cd` into it
 - Install requirements `ansible-galaxy collection install -r requirements.yml`
 
 ## GPU
 
 - GPU drivers will automatically be pulled from the Nvidia NGC catalogue
-- Driver version is defined in playbooks/deploy_jhub.yml
+- Driver version is defined in `playbooks/deploy_jhub.yml`
 
 
 ## Kubectl Namespaces
@@ -149,7 +163,7 @@ For example, to create 20 users of the form `jupyter-user-x` and save the userna
 
 ### Training Materials
 
-The NFS server IP address must be entered in `/roles/deploy_jhub/files/nfs-pv.yaml`
+The NFS server IP address must be entered in the peristent volume template here: `/roles/deploy_hub/tasks/nfs-pv.j2`
 
 
 ## Deploying JupyterHub
@@ -158,7 +172,7 @@ The NFS server IP address must be entered in `/roles/deploy_jhub/files/nfs-pv.ya
 | --------- | ---------- | ---------|
 | `hub_deployed_name` | Helm name of JupyterHub. | `jupyterhub` |
 | `hub_namespace` | Kubernetes Namespace for JupyterHub | `jupyterhub` |
-| `hub_version` | Helm chart version for JupyterHub (Newer versions may require a more recent kubernetes version)  | `"1.2.0"` |
+| `hub_version` | Helm chart version for JupyterHub (Newer versions may require a more recent kubernetes version)  | `"3.1.0"` |
 | `hub_config_file` | Name of helm values file of JupyterHub (place the file in `/roles/deploy_jhub/files/`) | `../deploy_jhub/files/config.yaml` |
 | `hub_cluster_name` | Name of JupyterHub cluster used in load balancer names | `jupyterhub_cluster` |
 | `hub_repo_name` | Name of repository for JupyterHub (place the file in `/roles/deploy_jhub/files/`) | `jupyterhub` |
