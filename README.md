@@ -105,7 +105,7 @@ All subsequent Kubernetes commands will omit the namespace for brevity.
 
 - Ensure that the terminal Ansible will run in can access the correct cluster (`kubectl get no`).
 - Check the config in `playbooks/deploy_jhub.yml`.
-- Copy the content of `config.yaml.template`(in `/roles/deploy_jhub/files/`) to create a `config.yaml` in the same directory and ensure the various secrets and fields marked:
+- Copy the content of `config.yaml.template`(in `/roles/deploy_jhub/files/`) to create a `config.yaml` in the same directory and ensure the various secrets and fields marked: `<Not Set>`
 - Go through each line checking the config values are as expected. Additional guidance is provided below:
 
 ### HTTPS Config
@@ -162,9 +162,43 @@ For example, to create 20 users of the form `jupyter-user-x` and save the userna
 `python3 scripts/create_users.py --basename "jupyter-user" --first_index 1 --last_index 20 > users.txt`
 
 ### Training Materials
-
 The NFS server IP address must be entered in the peristent volume template here: `/roles/deploy_hub/tasks/nfs-pv.j2`
 
+### Setting up JupyterHub Environments
+Below is an example environment that can be set up that can be used by a user to start a server in JupyterHub.
+This is added to the `profilelist` section in `roles/deploy_jhub/files/config.yaml`
+
+```yaml
+  ...
+  profilelist:
+    ...
+    - display_name: "Example Image"
+       description: |
+         Deploy example image with 4 CPUs, 4GB RAM
+       kubespawner_override:
+         image: example.com/example-image
+         cpu_limit: 4
+         cpu_guarantee: 0.05
+         mem_limit: "4G"
+         mem_guarantee: "4G"
+         extra_resource_limits: {}
+        # GPU specific  - uncomment below if required
+        #tolerations:
+        #  - key: nvidia.com/gpu
+        #    operator: Equal
+        #    effect: NoSchedule
+        #extra_resource_limits:
+        #  nvidia.com/gpu: "1"
+        # any additional scripts - e.g. clone specific repo
+        lifecycle_hooks:
+          postStart:
+            exec:
+              command:
+                - "bash"
+                - "-c"
+                - |
+                  <BASH COMMANDS HERE>
+```
 
 ## Deploying JupyterHub
 ### Variables (`/playbooks/deploy_jhub.yml`)
