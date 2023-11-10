@@ -88,7 +88,7 @@ hub:
 scheduling:
   # Try to pack users tightly rather than spinning up one node per user
   userScheduler:
-    enabled: true
+    enabled: false
   # Enable us to evict a placeholder rather than spin up a whole new node
   podPriority:
     enabled: true
