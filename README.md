@@ -78,13 +78,13 @@ sudo snap install helm --classic
 
 ### Local Environment Setup
 
-- Upgrade `pip3` using `pip3 install pip --upgrade`
+- Upgrade `pip3` using `pip3 install pip --upgrade` to ensure you are using the latest version of pip.
 - Create a virtual environment `venv` using `python3 -m venv venv`
 - Activate `venv`
 - Install the python dependencies: `pip3 install -r py-requirements.txt`
 - If you get an error about the version of setuptools, upgrade it manually using `pip3 install setuptools --upgrade`
 - Clone this repository and `cd` into it
-- Install requirements `ansible-galaxy collection install -r requirements.yml`
+- Install Ansible requirements `ansible-galaxy collection install -r requirements.yml`
 
 ## GPU
 
@@ -105,7 +105,7 @@ All subsequent Kubernetes commands will omit the namespace for brevity.
 
 - Ensure that the terminal Ansible will run in can access the correct cluster (`kubectl get no`).
 - Check the config in `playbooks/deploy_jhub.yml`.
-- Copy the content of `config.yaml.template`(in `/roles/deploy_jhub/files/`) to create a `config.yaml` in the same directory and ensure the various secrets and fields marked: `<Not Set>`
+- Copy the content of `config.yaml.template` (in `/roles/deploy_jhub/files/`) to create a `config.yaml` in the same directory and ensure the various secrets and fields marked: `<Not Set>` are completed.
 - Go through each line checking the config values are as expected. Additional guidance is provided below:
 
 ### HTTPS Config
@@ -119,7 +119,7 @@ Simply ensure you have:
 - A internet routable domain name
 - A (optionally/and/or) AAAA record(s) pointing to the IP address
 
-Update the config file with the domain name, by default it's set to `jupyter.stfc.ac.uk`.
+Update the config file with the domain name.
 
 #### Using existing TLS Certificate 
 
@@ -253,7 +253,7 @@ The currently issued certificate(s) can be viewed at: https://crt.sh/
 
 ### Longhorn
 
-Longhorn's configuration is defined by the `release_values` in `roles/deploy_jhub/tasks/main.yml`. By default, this creates a load balancer for the UI labelled `longhorn-frontend`, which must be associated with a prepared FIP, as described for JupyterHub's `proxy_public` load balancer.
+Longhorn's configuration is defined by the `release_values` in `roles/deploy_hub/tasks/main.yml`. By default, this creates a load balancer for the UI labelled `longhorn-frontend`, which must be associated with a prepared FIP, as described for JupyterHub's `proxy_public` load balancer.
 
 If you are required to uninstall and reinstall Longhorn, is may be necessary to manually delete the load balacer on OpenStack and the service (`kubectl get services -n longhorn-system` will list these). You must then restart the OpenStack controller manager pods before a new Longhorn load balancer can be created successfully.
 
