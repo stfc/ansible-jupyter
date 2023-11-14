@@ -23,11 +23,11 @@
     kind: Namespace
     state: present
 
-- name: Download Longhorn repo
+- name: Download Longhorn repos
   ansible.builtin.git:
-    repo: "https://github.com/longhorn/longhorn.git"
+    repo: "{{ longhorn_repo_name }}"
     dest: "/tmp/longhorn"
-    version: "v1.2.5"
+    version: "{{ longhorn_version }}"
     update: true # Automatically pull bug-fixes in
 
 - name: Install Longhorn prerequisites
