@@ -78,10 +78,10 @@ sudo snap install helm --classic
 
 ### Local Environment Setup
 
-- Upgrade `pip3` using `pip3 install pip --upgrade` to ensure you are using the latest version of pip.
 - Create a virtual environment `venv` using `python3 -m venv venv`
-- Activate `venv`
-- Install the python dependencies: `pip3 install -r py-requirements.txt`
+- Upgrade `pip3` using `pip3 install pip --upgrade` to ensure you are using the latest version of pip.
+- Activate `venv` using `. venv/bin/activate`
+- Install the python dependencies: `pip3 install -r requirements.txt`
 - If you get an error about the version of setuptools, upgrade it manually using `pip3 install setuptools --upgrade`
 - Clone this repository and `cd` into it
 - Install Ansible requirements `ansible-galaxy collection install -r requirements.yml`
@@ -89,8 +89,6 @@ sudo snap install helm --classic
 ## GPU
 
 - GPU drivers will automatically be pulled from the Nvidia NGC catalogue
-- Driver version is defined in `playbooks/deploy_jhub.yml`
-
 
 ## Kubectl Namespaces
 
