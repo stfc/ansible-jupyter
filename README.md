@@ -60,23 +60,35 @@ Provides a JupyterHub Service on an existing Openstack Cluster. This uses the he
 - Some metrics can't be selected by node name in Grafana dashboard as it requires a reverse DNS.
 
 ## Requirements
+The following assumes you have an Ubuntu 20.04 machine with `pip3`, `python3` and `python3-venv` already installed.
 
-- Ansible ([Installing Ansible — Ansible Documentation](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html))
+
+- Ansible ([Installing Ansible — Ansible Documentation](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html)) - this is installed using `pip` in `py-requirements.txt`
 - Helm 3 ([Installing Helm](https://helm.sh/docs/intro/install/))
 - kubectl ([Install Tools | Kubernetes](https://kubernetes.io/docs/tasks/tools/))
-- Python 3
-  - `ansible, kubernetes`
+
+Helm and kubectl can be installed using snap:
+
+```bash
+sudo apt-get update && sudo apt-get install -y snapd
+export PATH=$PATH:/snap/bin
+sudo snap install kubectl --classic
+sudo snap install helm --classic
+```
+
 ### Local Environment Setup
-- Upgrade pip3 as the default version is too old to handle the required deps: `pip3 install pip --upgrade`
-- Activate .venv if present then install pip deps: `pip3 install ansible setuptools setuptools-rust pyyaml kubernetes`
-- Clone the repository and cd into it
-- Install requirements `ansible-galaxy collection install -r requirements.yml`
+
+- Create a virtual environment `venv` using `python3 -m venv venv`
+- Upgrade `pip3` using `pip3 install pip --upgrade` to ensure you are using the latest version of pip.
+- Activate `venv` using `. venv/bin/activate`
+- Install the python dependencies: `pip3 install -r requirements.txt`
+- If you get an error about the version of setuptools, upgrade it manually using `pip3 install setuptools --upgrade`
+- Clone this repository and `cd` into it
+- Install Ansible requirements `ansible-galaxy collection install -r requirements.yml`
 
 ## GPU
 
 - GPU drivers will automatically be pulled from the Nvidia NGC catalogue
-- Driver version is defined in playbooks/deploy_jhub.yml
-
 
 ## Kubectl Namespaces
 
@@ -91,7 +103,7 @@ All subsequent Kubernetes commands will omit the namespace for brevity.
 
 - Ensure that the terminal Ansible will run in can access the correct cluster (`kubectl get no`).
 - Check the config in `playbooks/deploy_jhub.yml`.
-- Copy the content of `config.yaml.template`(in `/roles/deploy_jhub/files/`) to create a `config.yaml` in the same directory and ensure the various secrets and fields marked:
+- Copy the content of `config.yaml.template` (in `/roles/deploy_jhub/files/`) to create a `config.yaml` in the same directory and ensure the various secrets and fields marked: `<Not Set>` are completed.
 - Go through each line checking the config values are as expected. Additional guidance is provided below:
 
 ### HTTPS Config
@@ -105,7 +117,7 @@ Simply ensure you have:
 - A internet routable domain name
 - A (optionally/and/or) AAAA record(s) pointing to the IP address
 
-Update the config file with the domain name, by default it's set to `jupyter.stfc.ac.uk`.
+Update the config file with the domain name.
 
 #### Using existing TLS Certificate 
 
@@ -148,9 +160,43 @@ For example, to create 20 users of the form `jupyter-user-x` and save the userna
 `python3 scripts/create_users.py --basename "jupyter-user" --first_index 1 --last_index 20 > users.txt`
 
 ### Training Materials
+The NFS server IP address must be entered in the peristent volume template here: `/roles/deploy_hub/tasks/nfs-pv.j2`
 
-The NFS server IP address must be entered in `/roles/deploy_jhub/files/nfs-pv.yaml`
+### Setting up JupyterHub Environments
+Below is an example environment that can be set up that can be used by a user to start a server in JupyterHub.
+This is added to the `profilelist` section in `roles/deploy_jhub/files/config.yaml`
 
+```yaml
+  ...
+  profilelist:
+    ...
+    - display_name: "Example Image"
+       description: |
+         Deploy example image with 4 CPUs, 4GB RAM
+       kubespawner_override:
+         image: example.com/example-image
+         cpu_limit: 4
+         cpu_guarantee: 0.05
+         mem_limit: "4G"
+         mem_guarantee: "4G"
+         extra_resource_limits: {}
+        # GPU specific  - uncomment below if required
+        #tolerations:
+        #  - key: nvidia.com/gpu
+        #    operator: Equal
+        #    effect: NoSchedule
+        #extra_resource_limits:
+        #  nvidia.com/gpu: "1"
+        # any additional scripts - e.g. clone specific repo
+        lifecycle_hooks:
+          postStart:
+            exec:
+              command:
+                - "bash"
+                - "-c"
+                - |
+                  <BASH COMMANDS HERE>
+```
 
 ## Deploying JupyterHub
 ### Variables (`/playbooks/deploy_jhub.yml`)
@@ -158,7 +204,7 @@ The NFS server IP address must be entered in `/roles/deploy_jhub/files/nfs-pv.ya
 | --------- | ---------- | ---------|
 | `hub_deployed_name` | Helm name of JupyterHub. | `jupyterhub` |
 | `hub_namespace` | Kubernetes Namespace for JupyterHub | `jupyterhub` |
-| `hub_version` | Helm chart version for JupyterHub (Newer versions may require a more recent kubernetes version)  | `"1.2.0"` |
+| `hub_version` | Helm chart version for JupyterHub (Newer versions may require a more recent kubernetes version)  | `"3.1.0"` |
 | `hub_config_file` | Name of helm values file of JupyterHub (place the file in `/roles/deploy_jhub/files/`) | `../deploy_jhub/files/config.yaml` |
 | `hub_cluster_name` | Name of JupyterHub cluster used in load balancer names | `jupyterhub_cluster` |
 | `hub_repo_name` | Name of repository for JupyterHub (place the file in `/roles/deploy_jhub/files/`) | `jupyterhub` |
@@ -205,7 +251,7 @@ The currently issued certificate(s) can be viewed at: https://crt.sh/
 
 ### Longhorn
 
-Longhorn's configuration is defined by the `release_values` in `roles/deploy_jhub/tasks/main.yml`. By default, this creates a load balancer for the UI labelled `longhorn-frontend`, which must be associated with a prepared FIP, as described for JupyterHub's `proxy_public` load balancer.
+Longhorn's configuration is defined by the `release_values` in `roles/deploy_hub/tasks/main.yml`. By default, this creates a load balancer for the UI labelled `longhorn-frontend`, which must be associated with a prepared FIP, as described for JupyterHub's `proxy_public` load balancer.
 
 If you are required to uninstall and reinstall Longhorn, is may be necessary to manually delete the load balacer on OpenStack and the service (`kubectl get services -n longhorn-system` will list these). You must then restart the OpenStack controller manager pods before a new Longhorn load balancer can be created successfully.
 
