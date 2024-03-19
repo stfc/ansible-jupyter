@@ -136,7 +136,6 @@ hub:
       admin_groups:
         - stfc-cloud
     JupyterHub:
-      # See below why this is commented out
       authenticator_class: generic-oauth
 
 scheduling:
