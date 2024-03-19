@@ -118,7 +118,7 @@ hub:
       client_id: <TO_FILL>
       client_secret: <TO_FILL>
       # registration_token: <TO_FILL>
-      oauth_callback_url: https://jupyter.stfc.ac.uk/hub/oauth_callback
+      oauth_callback_url: https://iris-iam.stfc.ac.uk/hub/oauth_callback
       authorize_url: https://iris-iam.stfc.ac.uk/authorize
       token_url: https://iris-iam.stfc.ac.uk/token
       userdata_url: https://iris-iam.stfc.ac.uk/userinfo
@@ -127,60 +127,17 @@ hub:
         - preferred_username
         - profile
         - email
-        - groups
-      username_key: preferred_username
+      username_claim: preferred_username
+      userdata_params:
+        state: state
+      claim_groups_key: groups
+      allowed_groups:
+        - stfc-cloud
+      admin_groups:
+        - stfc-cloud
     JupyterHub:
       # See below why this is commented out
-      # authenticator_class: GroupAuth
-  extraConfig:
-    custom_auth: |
-      from typing import List
-      from oauthenticator.generic import GenericOAuthenticator
-
-      class GroupAuth(GenericOAuthenticator):
-          allowed_groups: List[str] = [
-              "stfc-cloud"
-          ]
-
-          admin_groups: List[str] = [
-              "stfc-cloud"
-          ]
-
-          # Adapted from https://github.com/jupyterhub/oauthenticator/pull/395/files
-          # When it's merged this can and should be removed
-
-          claim_groups_key = "groups"
-          @staticmethod
-          def check_user_in_groups(member_groups, allowed_groups):
-              return bool(set(member_groups) & set(allowed_groups))
-
-          async def authenticate(self, *args, **kwargs):
-              user_info = await super().authenticate(*args, **kwargs)
-              if self.allowed_groups:
-                  self.log.info('Validating if user claim groups match any of {}'.format(self.allowed_groups))
-                  user_data_resp_json = user_info["auth_state"]["oauth_user"]
-
-                  if callable(self.claim_groups_key):
-                      groups = self.claim_groups_key(user_data_resp_json)
-                  else:
-                      groups = user_data_resp_json.get(self.claim_groups_key)
-
-                  if not groups:
-                      self.log.error(
-                          "No claim groups found for user! Something wrong with the `claim_groups_key` {}? {}".format(
-                              self.claim_groups_key, user_data_resp_json
-                          )
-                      )
-                      groups = []
-
-                  if self.check_user_in_groups(groups, self.allowed_groups):
-                      user_info['admin'] = self.check_user_in_groups(groups, self.admin_groups)
-                  else:
-                      user_info = None
-
-              return user_info
-
-      c.JupyterHub.authenticator_class = GroupAuth
+      authenticator_class: generic-oauth
 
 scheduling:
   # Try to pack users tightly rather than spinning up one node per user
