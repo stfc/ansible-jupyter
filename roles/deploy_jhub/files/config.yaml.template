@@ -71,7 +71,7 @@ hub:
       admin_users:
         - AdminUserAccountName
       check_common_password: true
-      open_signup: true
+      open_signup: false
       allowed_users:
         - Some Username
       # Uncomment allowed_users and insert the list of user names allowed to sign-up using the same format as above, if required.
