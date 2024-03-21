@@ -45,8 +45,8 @@ singleuser:
   # Default profile, this is what the placeholders will use
   startTimeout: 3600 # seconds == 60 minutes
   cpu:
-    limit: 12
-    guarantee: 8
+    limit: 2
+    guarantee: 0.05
   memory:
     limit: 1.8G
     guarantee: 1.8G
