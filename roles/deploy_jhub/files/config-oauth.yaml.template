@@ -3,7 +3,7 @@ proxy:
   https:
     enabled: true
     hosts:
-      - {{jupyter_domain_name}}
+      - "{{ JUPYTER_DOMAIN_NAME }}"
     letsencrypt:
       # Uncomment acmeserver for a test certificate
       # acmeServer: "https://acme-staging-v02.api.letsencrypt.org/directory"
@@ -77,7 +77,7 @@ hub:
       client_id: <TO_FILL>
       client_secret: <TO_FILL>
       # registration_token: <TO_FILL>
-      oauth_callback_url: https://{{jupyter_domain_name}}/hub/oauth_callback
+      oauth_callback_url: "https://{{ JUPYTER_DOMAIN_NAME }}/hub/oauth_callback"
       authorize_url: https://iris-iam.stfc.ac.uk/authorize
       token_url: https://iris-iam.stfc.ac.uk/token
       userdata_url: https://iris-iam.stfc.ac.uk/userinfo
