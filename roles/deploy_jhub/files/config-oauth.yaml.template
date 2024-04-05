@@ -3,18 +3,23 @@ proxy:
   https:
     enabled: true
     hosts:
-      - jupyter.stfc.ac.uk
+      - {{jupyter_domain_name}}
     letsencrypt:
       # Uncomment acmeserver for a test certificate
       # acmeServer: "https://acme-staging-v02.api.letsencrypt.org/directory"
       # This email gets warnings if auto-renewal fails
-      contactEmail: <TO_FILL>
+      contactEmail: <Not Set>
   # This can be generated with `openssl rand -hex 32`
-  secretToken: <TO_FILL>
+  secretToken: <Not Set>
+  service:
+    loadBalancerIP: <IP Address>
 
 singleuser:
   # Use new UI by default as the old UI is being deprecated
   defaultUrl: "/lab"
+  extraEnv:
+    JUPYTERHUB_ACTIVITY_INTERVAL: "3600"
+  events: false
 
   storage:
     # Required for PyTorch
@@ -22,14 +27,18 @@ singleuser:
       - name: shm-volume
         emptyDir:
           medium: Memory
+      - name: training-materials
+        persistentVolumeClaim:
+          claimName: training-materials
     extraVolumeMounts:
       - name: shm-volume
         mountPath: /dev/shm
+      - name: training-materials
+        mountPath: /mnt/materials
 
     type: dynamic
-    capacity: 1Gi
+    capacity: 10Gi
     dynamic:
-      ## add storage class name here
       storageClass: longhorn
 
   # Default profile, this is what the placeholders will use
@@ -40,70 +49,20 @@ singleuser:
   memory:
     limit: 1.8G
     guarantee: 1.8G
-  #Uncomment this to grant sudo right to users (only works with images from jupyter/docker-stacks)
-  # extraEnv:
-  #   GRANT_SUDO: "yes"
-  #   NOTEBOOK_ARGS: "--allow-root"
-  # uid: 0
-  # cmd: start-singleuser.sh
 
   profileList:
-    - display_name: "Default: Normal Size"
+    - display_name: "Default: Minimal environment"
       description: |
         For small jobs and prototyping: 2 CPUs, 1.5GB RAM and no GPU. This is the default, and will usually start in ~2 minutes. During periods of high-contention it may take up to 20 minutes to create.
-      default: True
-    - display_name: "Large Memory Instance"
-      description: |
-        For larger jobs. 8 CPUs, 7.5GB RAM and no GPU. This may
-        take up to 20 minutes to create.
       kubespawner_override:
-        cpu_limit: 8
-        cpu_guarantee: 0.05
-        mem_limit: "7.5G"
-        mem_guarantee: "7.5G"
-        extra_resource_limits: {}
-    # - display_name: "VDI-testing"
-    #   description: |
-    #     Deploy image with vitual desktop 4 CPUs, 4GB RAM
-    #   kubespawner_override:
-    #     image: harbor.stfc.ac.uk/stfc-cloud/jupyterhub-desktop-development:latest
-    #     cpu_limit: 4
-    #     cpu_guarantee: 0.05
-    #     mem_limit: "4G"
-    #     mem_guarantee: "4G"
-    #     extra_resource_limits: {}
-    # - display_name: "GPU"
-    #   description: |
-    #     This configuration gives you 2 CPUs, 3GB of RAM, and a GPU
-    #   image: consideratio/singleuser-gpu:v0.3.0
-    #   kubespawner_override:
-    #     cpu_limit: 2
-    #     cpu_guarantee: 0.05
-    #     mem_limit: "3G"
-    #     mem_guarantee: "3G"
-    #     tolerations:
-    #       - key: nvidia.com/gpu
-    #         operator: Equal
-    #         value: "present"
-    #         effect: NoSchedule
-    #     extra_resource_limits:
-    #       nvidia.com/gpu: "1"
-    # - display_name: "GPU-desktop"
-    #   description: |
-    #     This configuration gives you 2 CPUs, 3GB of RAM, and a GPU
-    #   kubespawner_override:
-    #     image: harbor.stfc.ac.uk/stfc-cloud/jupyterhub-desktop-gpu:latest
-    #     cpu_limit: 2
-    #     cpu_guarantee: 0.05
-    #     mem_limit: "3G"
-    #     mem_guarantee: "3G"
-    #     tolerations:
-    #       - key: nvidia.com/gpu
-    #         operator: Equal
-    #         value: "present"
-    #         effect: NoSchedule
-    #     extra_resource_limits:
-    #       nvidia.com/gpu: "1"
+        image: jupyter/minimal-notebook
+      default: true
+    - display_name: "Datascience environment"
+      kubespawner_override:
+        image: jupyter/datascience-notebook
+      description: |
+        For small jobs and prototyping: 2 CPUs, 1.5GB RAM and no GPU.
+      default: false
 
 hub:
   #remove login for metrics collection
@@ -118,7 +77,7 @@ hub:
       client_id: <TO_FILL>
       client_secret: <TO_FILL>
       # registration_token: <TO_FILL>
-      oauth_callback_url: https://jupyter.stfc.ac.uk/hub/oauth_callback
+      oauth_callback_url: https://{{jupyter_domain_name}}/hub/oauth_callback
       authorize_url: https://iris-iam.stfc.ac.uk/authorize
       token_url: https://iris-iam.stfc.ac.uk/token
       userdata_url: https://iris-iam.stfc.ac.uk/userinfo
@@ -141,7 +100,7 @@ hub:
 scheduling:
   # Try to pack users tightly rather than spinning up one node per user
   userScheduler:
-    enabled: true
+    enabled: false
   # Enable us to evict a placeholder rather than spin up a whole new node
   podPriority:
     enabled: true
