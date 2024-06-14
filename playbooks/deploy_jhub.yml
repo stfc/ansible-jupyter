@@ -3,6 +3,8 @@
     - deploy_hub
     # - deploy_prometheus_stack
   vars:
+    # Jupyterhub domain name
+    JUPYTER_DOMAIN_NAME: "example.com"
     # Even if you don't use GPUs we deploy the Nvidia GPU operator
     # for simplicity (otherwise we need another var to enable GPU support across notebooks).
     # This version will be pulled from the Nvidia NGC catalogue
