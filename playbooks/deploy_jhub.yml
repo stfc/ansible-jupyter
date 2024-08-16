@@ -3,19 +3,12 @@
     - deploy_hub
     # - deploy_prometheus_stack
   vars:
-    # Jupyterhub domain name
-    JUPYTER_DOMAIN_NAME: "example.com"
-    # Even if you don't use GPUs we deploy the Nvidia GPU operator
-    # for simplicity (otherwise we need another var to enable GPU support across notebooks).
-    # This version will be pulled from the Nvidia NGC catalogue
-    NVIDIA_DRIVER_VERSION: 515.48.07
-
     # Longhorn repo
-    longhorn_version: "v1.5.2"
+    longhorn_version: "v1.6.2"
     # longhorn_repo_name
     longhorn_repo_name: "https://github.com/longhorn/longhorn.git"
     # Helm chart version for Jhub (newer version may require newer kubernetes version >=1.17)
-    hub_version: "3.3.2"
+    hub_version: "3.3.8"
     # Name of JupyterHub cluster used in load balancer names
     hub_cluster_name: jupyterhub_cluster
     # K8s namespace

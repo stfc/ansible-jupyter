@@ -3,7 +3,7 @@ proxy:
   https:
     enabled: true
     hosts:
-      - "{{ JUPYTER_DOMAIN_NAME }}"
+      - <Host Domain>
     letsencrypt:
       # Uncomment acmeserver for a test certificate
       # acmeServer: "https://acme-staging-v02.api.letsencrypt.org/directory"
@@ -20,7 +20,7 @@ singleuser:
   defaultUrl: "/lab"
   extraEnv:
     JUPYTERHUB_ACTIVITY_INTERVAL: "3600"
-  events: false
+  events: true
 
   storage:
     # Required for PyTorch
