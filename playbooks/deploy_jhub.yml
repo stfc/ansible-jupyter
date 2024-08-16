@@ -3,11 +3,6 @@
     - deploy_hub
     # - deploy_prometheus_stack
   vars:
-    # Even if you don't use GPUs we deploy the Nvidia GPU operator
-    # for simplicity (otherwise we need another var to enable GPU support across notebooks).
-    # This version will be pulled from the Nvidia NGC catalogue
-    NVIDIA_DRIVER_VERSION: 515.48.07
-
     # Longhorn repo
     longhorn_version: "v1.6.2"
     # longhorn_repo_name
