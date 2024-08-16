@@ -9,7 +9,7 @@
     NVIDIA_DRIVER_VERSION: 515.48.07
 
     # Longhorn repo
-    longhorn_version: "v1.6.1"
+    longhorn_version: "v1.6.2"
     # longhorn_repo_name
     longhorn_repo_name: "https://github.com/longhorn/longhorn.git"
     # Helm chart version for Jhub (newer version may require newer kubernetes version >=1.17)
