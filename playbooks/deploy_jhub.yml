@@ -7,6 +7,8 @@
     longhorn_version: "v1.6.2"
     # longhorn_repo_name
     longhorn_repo_name: "https://github.com/longhorn/longhorn.git"
+    # config file for longhorn helm chart
+    longhorn_config_file: ../deploy_jhub/files/longhorn.yaml
     # Helm chart version for Jhub (newer version may require newer kubernetes version >=1.17)
     hub_version: "3.3.8"
     # Name of JupyterHub cluster used in load balancer names

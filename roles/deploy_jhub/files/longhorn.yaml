@@ -1,0 +1,14 @@
+defaultSettings:
+  taintToleration: "nvidia.com/gpu:NoSchedule"
+  snapshotMaxCount: 10
+  snapshotDataIntegrity: "enabled"
+  snapshotDataIntegrityCronjob: "0 12 * * 1"
+  replicaAutoBalance: "best-effort"
+  autoDeletePodWhenVolumeDetachedUnexpectedly: true
+  allowVolumeCreationWithDegradedAvailability: true
+  nodeDrainPolicy: "block-for-eviction"
+
+persistence:
+  defaultClassReplicaCount: 3
+  defaultDataLocality: disabled
+  migratable: "true"

@@ -30,6 +30,8 @@
     chart_ref: longhorn/longhorn
     name: longhorn
     release_namespace: longhorn-system
+    values_files:
+      - "{{ role_path }}/{{ longhorn_config_file }}"
     update_repo_cache: yes
     release_values:
       taintToleration: "nvidia.com/gpu:NoSchedule"
