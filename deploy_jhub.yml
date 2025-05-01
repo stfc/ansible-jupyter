@@ -1,0 +1,26 @@
+- hosts: localhost # Kubectl is configured from this machine
+  pre_tasks:
+    - name: Include base variables
+      include_vars: base.yaml
+
+    - name: Include secret variables
+      include_vars: secrets.yaml
+
+    - name: Include dev variables
+      include_vars: dev.yaml
+      when: jupyter_environment == "dev"
+
+    - name: Include prod variables
+      include_vars: prod.yaml
+      when: jupyter_environment == "prod"
+
+    - name: Include training variables
+      include_vars: training.yaml
+      when: jupyter_environment == "training"
+
+  roles:
+    - deploy_jhub
+    - deploy_hub
+    # - deploy_prometheus_stack
+
+
