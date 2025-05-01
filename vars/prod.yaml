@@ -1,0 +1,40 @@
+# Addresses
+host_domain: "jupyter.stfc.ac.uk"
+ip_address: "130.246.214.172"
+
+# Admins and user accounts
+# These get pre-pended with "admin-"
+admin_names:
+  - # name1
+  - # name2
+number_of_users: # number of users to create
+username: # username styple, that gets a number automatically added to the end
+
+# whether to use an acme server or not
+acme_server: false
+
+# Images
+profiles:
+  - profile1:
+    display_name: # Environment name displayed to the user
+    description: # Description of the environment to display to the user
+    default: false
+    kubespawner_override:
+      image: # image to use. eg:consideratio/singleuser-gpu:v0.3.0
+      cpu_limit: 6
+      cpu_guarantee: 0.05
+      mem_limit: 25G
+      mem_guarantee: 25G
+      
+      # GPU specific remove if GPU not needed
+      tolerations:
+        key: nvidia.com/gpu
+        operator: Equal
+        effect: NoSchedule
+      extra_resource_limits:
+        gpus: "1"
+      # any additional scripts - e.g. clone specific repo
+      # if lifecycle_hooks:
+      commands:
+          - # git clone repo 1
+          - # git clone repo 2
