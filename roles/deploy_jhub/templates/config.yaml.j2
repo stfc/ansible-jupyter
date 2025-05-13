@@ -3,16 +3,16 @@ proxy:
   https:
     enabled: true
     hosts:
-      - <Host Domain>
+      - "{{ host_domain }}"
     letsencrypt:
-      # Uncomment acmeserver for a test certificate
-      # acmeServer: "https://acme-staging-v02.api.letsencrypt.org/directory"
+{% if acme_server is true %}
+      acmeServer: "https://acme-staging-v02.api.letsencrypt.org/directory"
+{% endif %}
       # This email gets warnings if auto-renewal fails
-      contactEmail: <Not Set>
+      contactEmail: "{{ contact_email }}"
   # This can be generated with `openssl rand -hex 32`
-  secretToken: <Not Set>
   service:
-    loadBalancerIP: <IP Address>
+    loadBalancerIP: "{{ ip_address }}"
 
 singleuser:
   # Use new UI by default as the old UI is being deprecated
@@ -52,29 +52,59 @@ singleuser:
     guarantee: 1.8G
 
   profileList:
-    - display_name: "Default: Minimal environment"
-      description: |
-        For small jobs and prototyping: 2 CPUs, 1.5GB RAM and no GPU. This is the default, and will usually start in ~2 minutes. During periods of high-contention it may take up to 20 minutes to create.
-      kubespawner_override:
-        image: jupyter/minimal-notebook
-      default: true
-    - display_name: "Datascience environment"
-      kubespawner_override:
-        image: jupyter/datascience-notebook
-      description: |
-        For small jobs and prototyping: 2 CPUs, 1.5GB RAM and no GPU.
-      default: false
+  {% for profile in profiles %}
+    - display_name: "{{ profile.display_name }}"
+        description: |
+          "{{ profile. description }}"
+        default: {{ profile.default }}
+        kubespawner_override:
+          image: "{{ profile.kubespawner_override.image }}"
+
+  {% if profile.kubespawner_override.tolerations is defined %}
+        tolerations:
+          - key: {{ profile.kubespawner_override.tolerations.key }}
+            operator: {{ profile.kubespawner_override.tolerations.operator }}
+            effect: {{ profile.kubespawner_override.tolerations.effect }}
+  {% endif %}
+
+  {% if profile.kubespawner_override.extra_resource_limits is defined %}
+        extra_resource_limits:
+          nvidia.com/gpu: {{ profile.kubespawner_override.extra_resource_limits.gpus}}
+  {% endif %}
+
+  {% if profile.kubespawner_override.commands is defined %}
+        lifecycle_hooks:
+            postStart:
+              exec:
+                command:
+                  - "bash"
+                  - "-c"
+                  - |
+  {% for command in profile.kubespawner_override.commands %}
+                  {{ command }} || true
+  {% endfor %}
+  {% endif %}
+
+  {% endfor %}
 
 hub:
   config:
     Authenticator:
       admin_users:
-        - AdminUserAccountName
-      check_common_password: true
+  #  Weird indentation is expected in .j2 file
+  {% for admin_name in (admin_names) %}
+    - admin-{{ admin_name }}
+  {% endfor %}
+    check_common_password: true
       open_signup: false
       allowed_users:
-        - Some Username
-      # Uncomment allowed_users and insert the list of user names allowed to sign-up using the same format as above, if required.
+  #  Weird indentation is expected in .j2 file
+{% set total_n_users = number_of_users | int %}
+{% set width_n_users = ("%d" % total_n_users).__len__() %}
+{% for i in range (1, (number_of_users | int) + 1) %}
+      - {{ username }}-{{ "%0*d" % (width_n_users, i) }}
+{% endfor %}
+
     JupyterHub:
       authenticator_class: nativeauthenticator.NativeAuthenticator
   consecutiveFailureLimit: 0
@@ -106,3 +136,4 @@ cull:
   timeout: 432000 # seconds == 5 day
   every: 3600 # Run once an hour instead of every 10 minutes
   concurrency: 1
+
