@@ -5,7 +5,7 @@ proxy:
     hosts:
       - "{{ host_domain }}"
     letsencrypt:
-{% if acme_server is true %}
+{% if staging_cert is true %}
       acmeServer: "https://acme-staging-v02.api.letsencrypt.org/directory"
 {% endif %}
       # This email gets warnings if auto-renewal fails
@@ -55,24 +55,21 @@ singleuser:
   {% for profile in profiles %}
     - display_name: "{{ profile.display_name }}"
         description: |
-          "{{ profile. description }}"
+          "{{ profile.description }}"
         default: {{ profile.default }}
         kubespawner_override:
-          image: "{{ profile.kubespawner_override.image }}"
+          image: "{{ profile.image }}"
 
-  {% if profile.kubespawner_override.tolerations is defined %}
+  {% if profile.use_gpus is defined %}
         tolerations:
-          - key: {{ profile.kubespawner_override.tolerations.key }}
-            operator: {{ profile.kubespawner_override.tolerations.operator }}
-            effect: {{ profile.kubespawner_override.tolerations.effect }}
-  {% endif %}
-
-  {% if profile.kubespawner_override.extra_resource_limits is defined %}
+          - key: {{ profile.GPU_info.key }}
+            operator: {{ profile.GPU_info.operator }}
+            effect: {{ profile.GPU_info.effect }}
         extra_resource_limits:
-          nvidia.com/gpu: {{ profile.kubespawner_override.extra_resource_limits.gpus}}
+          nvidia.com/gpu: {{ profile.GPU_info.number_of_gpus}}
   {% endif %}
 
-  {% if profile.kubespawner_override.commands is defined %}
+  {% if profile.commands is defined %}
         lifecycle_hooks:
             postStart:
               exec:
@@ -80,7 +77,7 @@ singleuser:
                   - "bash"
                   - "-c"
                   - |
-  {% for command in profile.kubespawner_override.commands %}
+  {% for command in profile.commands %}
                   {{ command }} || true
   {% endfor %}
   {% endif %}
