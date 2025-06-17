@@ -92,7 +92,7 @@ hub:
     Authenticator:
     {% if iris_iam is true %}
       auto_login: false
-  
+    # Use OAuthentcator if IAM selected in vars
     GenericOAuthenticator:
       login_service: "IRIS IAM" # Name for the shiny button
       client_id: {{ client_id }}
@@ -119,6 +119,7 @@ hub:
       authenticator_class: generic-oauth
     {% endif %}
 
+  {% if iris_iam is false %} 
       admin_users:
   #  Weird indentation is expected in .j2 file
   {% for admin_name in (admin_names) %}
@@ -138,6 +139,7 @@ hub:
     
     JupyterHub:
       authenticator_class: nativeauthenticator.NativeAuthenticator
+    {% endif %}
   consecutiveFailureLimit: 0
   extraConfig:
     myConfig: |
