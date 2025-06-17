@@ -1,6 +1,6 @@
 contact_email: "cloud-support@stfc.ac.uk"
 # Longhorn repo
-longhorn_version: "v1.8.1"
+longhorn_version: "v1.9.0"
 # longhorn_repo_name
 longhorn_repo_name: "https://github.com/longhorn/longhorn.git"
 # config file for longhorn helm chart
