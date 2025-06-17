@@ -21,6 +21,6 @@
   roles:
     - deploy_jhub
     - deploy_hub
-    # - deploy_prometheus_stack
+
 
 

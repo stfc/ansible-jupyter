@@ -2,6 +2,12 @@
 host_domain: "jupyter.stfc.ac.uk"
 ip_address: "130.246.214.172"
 
+# OAuth - false by default
+iris_iam: false 
+client_id: # clientid
+client_secret: #oauth-secret
+registration_token: # registration-token
+
 # Admins and user accounts
 # These get pre-pended with "admin-"
 admin_names:
@@ -10,7 +16,7 @@ admin_names:
 number_of_users: # number of users to create
 username: # username styple, that gets a number automatically added to the end
 
-# whether to use an acme server or not
+# whether to use staging
 acme_server: false
 
 # Images
