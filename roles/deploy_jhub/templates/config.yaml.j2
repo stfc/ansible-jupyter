@@ -98,7 +98,7 @@ hub:
       client_id: {{ client_id }}
       client_secret: {{ client_secret }}
       # registration_token: {{ registration_token }}
-      oauth_callback_url: "https://{{ JUPYTER_DOMAIN_NAME }}/hub/oauth_callback"
+      oauth_callback_url: "https://{{ host_domain }}/hub/oauth_callback"
       authorize_url: https://iris-iam.stfc.ac.uk/authorize
       token_url: https://iris-iam.stfc.ac.uk/token
       userdata_url: https://iris-iam.stfc.ac.uk/userinfo

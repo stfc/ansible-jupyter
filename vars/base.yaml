@@ -21,8 +21,3 @@ hub_repo_name: jupyterhub
 hub_repo_url: https://jupyterhub.github.io/helm-chart/
 # Chart reference for JupyterHub
 hub_chart_ref: jupyterhub/jupyterhub
-
-# Helm name of the prometheus service
-prometheus_deployed_name: prometheus
-# K8s namespace
-prometheus_namespace: prometheus
