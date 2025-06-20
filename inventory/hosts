@@ -1,0 +1,10 @@
+# Uncomment as required
+
+[prod]
+#localhost ansible_connection=local
+
+[training]
+#localhost ansible_connection=local
+
+[dev]
+#localhost ansible_connection=local
