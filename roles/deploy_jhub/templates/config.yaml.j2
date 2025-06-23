@@ -7,6 +7,8 @@ proxy:
     letsencrypt:
 {% if staging_cert is true %}
       acmeServer: "https://acme-staging-v02.api.letsencrypt.org/directory"
+{% else %}
+      acmeServer: "https://acme-v02.api.letsencrypt.org/directory"
 {% endif %}
       # This email gets warnings if auto-renewal fails
       contactEmail: "{{ contact_email }}"
@@ -116,6 +118,7 @@ hub:
       manage_groups: true
     JupyterHub:
       authenticator_class: generic-oauth
+
      {% else %}
       admin_users:
   #  Weird indentation is expected in .j2 file
