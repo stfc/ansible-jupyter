@@ -2,8 +2,24 @@
 host_domain: "test.jupyter.stfc.ac.uk"
 ip_address: "130.246.213.116"
 
+# IRIS IAM
+# comment out if using usernames below
+iris_iam: false 
+
+client_id: #client ID
+client_secret: # client secret 
+
+admin_groups:
+  - # group1
+  - # group2
+
+allowed_groups:
+  - # group3
+  - # group4
+
 # Admins and user accounts
 # These get pre-pended with "admin-"
+# comment out admin, number_of_users, and username if using IAM
 admin_names:
   - # name1
   - # name2

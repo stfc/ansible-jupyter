@@ -89,6 +89,37 @@ singleuser:
 hub:
   config:
     Authenticator:
+    {% if iris_iam is defined %}
+    auto_login: false
+    GenericOAuthenticator:
+      client_id: {{ client_id }}
+      client_secret: {{ client_secret }}
+      oauth_callback_url: "https://{{ host_domain }}/hub/oauth_callback"
+      authorize_url: https://iris-iam.stfc.ac.uk/authorize
+      token_url: https://iris-iam.stfc.ac.uk/token
+      userdata_url: https://iris-iam.stfc.ac.uk/userinfo
+      scope:
+        - openid
+        - preferred_username
+        - profile
+        - email
+      username_claim: preferred_username
+      userdata_params:
+        state: state
+      claim_groups_key: groups
+      allowed_groups:
+{% for allowed_group in allowed_groups %}
+        - {{ allowed_group }}
+{% endfor %}
+      admin_groups:
+{% for admin_group in admin_groups %}
+        - {{ admin_group }}
+{% endfor %}
+      manage_groups: true
+    JupyterHub:
+      authenticator_class: generic-oauth
+
+     {% else %}
       admin_users:
   #  Weird indentation is expected in .j2 file
   {% for admin_name in (admin_names) %}
@@ -106,6 +137,8 @@ hub:
 
     JupyterHub:
       authenticator_class: nativeauthenticator.NativeAuthenticator
+    {% endif %}
+
   consecutiveFailureLimit: 0
   extraConfig:
     myConfig: |

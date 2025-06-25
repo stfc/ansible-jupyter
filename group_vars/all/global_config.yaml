@@ -1,6 +1,6 @@
 contact_email: "cloud-support@stfc.ac.uk"
 # Longhorn repo
-longhorn_version: "v1.8.1"
+longhorn_version: "v1.9.0"
 # longhorn_repo_name
 longhorn_repo_name: "https://github.com/longhorn/longhorn.git"
 # config file for longhorn helm chart
@@ -21,8 +21,3 @@ hub_repo_name: jupyterhub
 hub_repo_url: https://jupyterhub.github.io/helm-chart/
 # Chart reference for JupyterHub
 hub_chart_ref: jupyterhub/jupyterhub
-
-# Helm name of the prometheus service
-prometheus_deployed_name: prometheus
-# K8s namespace
-prometheus_namespace: prometheus
