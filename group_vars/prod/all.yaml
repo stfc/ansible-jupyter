@@ -20,6 +20,10 @@ allowed_groups:
 # These get pre-pended with "admin-"
 # comment out admin, number_of_users, and username if using IAM
 admin_names:
+  - cgreen
+  - dfairbrother
+  - jcaballero
+  - moflynn
   - # name1
   - # name2
 number_of_users: # number of users to create
