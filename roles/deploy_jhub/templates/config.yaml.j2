@@ -120,19 +120,20 @@ hub:
       authenticator_class: generic-oauth
 
      {% else %}
-      admin_users:
-  #  Weird indentation is expected in .j2 file
+  admin_users:
+{#  Weird indentation is expected in .j2 file #}
   {% for admin_name in (admin_names) %}
-    - admin-{{ admin_name }}
+      - admin-{{ admin_name }}
   {% endfor %}
     check_common_password: true
       open_signup: false
       allowed_users:
-  #  Weird indentation is expected in .j2 file
-{% set total_n_users = number_of_users | int %}
-{% set width_n_users = ("%d" % total_n_users).__len__() %}
-{% for i in range (1, (number_of_users | int) + 1) %}
-      - {{ username }}-{{ "%0*d" % (width_n_users, i) }}
+{#  Weird indentation is expected in .j2 file #}
+{% for prefix, count in user_groups.items() %}
+{%   set width_n_users = ("%d" % (count | int)).__len__() %}
+{%   for i in range(1, (count | int) + 1) %}
+        - {{ prefix }}-{{ "%0*d" % (width_n_users, i) }}
+{%   endfor %}
 {% endfor %}
 
     JupyterHub:
