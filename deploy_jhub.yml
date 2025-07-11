@@ -1,6 +1,8 @@
 - hosts: all # Kubectl is configured from this machine
   roles:
     - deploy_jhub
+      tags:
+        - deploy_jhub
     - deploy_hub
-
-
+      tags:
+        - deploy_hub
