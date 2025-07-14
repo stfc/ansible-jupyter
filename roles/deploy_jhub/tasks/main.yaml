@@ -1,3 +1,5 @@
+- name: set type of environment
+  ansible.builtin.include_tasks: env.yaml
 - name: template config file
   ansible.builtin.template:
     src: config.yaml.j2

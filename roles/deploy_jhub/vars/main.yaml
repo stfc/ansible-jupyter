@@ -1,0 +1,15 @@
+---
+# Dictionary containing all environment-specific data
+environments:
+  dev:
+    host_domain: "test.jupyter.stfc.ac.uk"
+    ip_address: "130.246.213.116"
+    staging_cert: "false"
+  training:
+    host_domain: "jupyter.stfc.ac.uk"
+    ip_address: "130.246.213.55"
+    staging_cert: "true"
+  prod:
+    host_domain: "prod.jupyter.stfc.ac.uk" # Example value, replace with actual
+    ip_address: "130.246.213.77"  # Example value, replace with actual
+    staging_cert: "false"
