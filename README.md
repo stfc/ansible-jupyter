@@ -71,7 +71,12 @@ sudo snap install helm --classic
     - `allowed_groups`: List of allowed iris iam groups to use for users
       </p>
     - `admin_names`: The admin usernames to be created (these will be prepended with `admin-`)
-    - `number_of_users`: The number of user accounts to be created
+    - `user_groups`: Mapping of username prefixes to the number of accounts to create. For example:
+      ```yaml
+      user_groups:
+        foo: 5
+        bar: 8
+      ```
     - `staging_cert`: whether to use acme to generate a staging cert
     - `nfs_ip`: The IP address of the nfs server
       </p>
