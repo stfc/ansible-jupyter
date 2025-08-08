@@ -71,7 +71,7 @@ singleuser:
           nvidia.com/gpu: {{ profile.GPU_info.number_of_gpus}}
   {% endif %}
 
-  {% if profile.commands is defined %}
+  {% if profile.commands | default([]) | select('truthy') | list) | length > 0 %}
         lifecycle_hooks:
             postStart:
               exec:
