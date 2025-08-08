@@ -89,7 +89,7 @@ singleuser:
 hub:
   config:
     Authenticator:
-    {% if iris_iam is defined %}
+    {% if iris_iam is true %}
     auto_login: false
     GenericOAuthenticator:
       client_id: {{ client_id }}
