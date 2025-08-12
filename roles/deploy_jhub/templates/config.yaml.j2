@@ -57,7 +57,7 @@ singleuser:
   {% for profile in profiles %}
    - display_name: "{{ profile.display_name }}"
        description: |
-         "{{ profile.description }}"
+         {{ profile.description }}
        image: consideratio/singleuser-gpu:v0.3.0
        default: {{ profile.default }}
        kubespawner_override:
