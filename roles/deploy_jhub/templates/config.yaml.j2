@@ -126,7 +126,7 @@ hub:
   admin_users:
   #  Weird indentation is expected in .j2 file
   {% for admin_name in (admin_names) %}
-      - admin-{{ admin_name }}
+      - {{ admin_name }}
   {% endfor %}
     check_common_password: true
       open_signup: false
