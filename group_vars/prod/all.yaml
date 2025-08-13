@@ -17,8 +17,6 @@ allowed_groups:
   - # group4
 
 # Admins and user accounts
-# These get pre-pended with "admin-"
-# comment out admin_names and user_groups if using IAM
 admin_names:
   - # name1
   - # name2
