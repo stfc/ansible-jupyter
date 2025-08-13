@@ -18,12 +18,14 @@ allowed_groups:
 
 # Admins and user accounts
 # These get pre-pended with "admin-"
-# comment out admin, number_of_users, and username if using IAM
+# comment out admin_names and user_groups if using IAM
 admin_names:
   - # name1
   - # name2
-number_of_users: # number of users to create
-username: # username style, that gets a number automatically added to the end
+user_groups:
+  # username: number of users to create
+  # foo: 5
+  # bar: 8
 
 # whether to use an acme server or not
 staging_cert: false
