@@ -127,7 +127,7 @@ hub:
 {#  Weird indentation is expected in .j2 file #}
 {% if (admin_names | default([]) | select('truthy') | list) | length > 0 %}
   {% for admin_name in (admin_names) %}
-      - admin-{{ admin_name }}
+      - {{ admin_name }}
   {% endfor %}
 {% endif %}
     check_common_password: true
