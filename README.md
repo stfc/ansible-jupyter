@@ -96,7 +96,10 @@ sudo snap install helm --classic
     - `effect`: Whether to schedule on node if key taint not matched. Usually: `NoSchedule`
        </p>
     - `commands`: The commands (git clones) to run on the deployed instances/images
-7. Run the playbook: `ansible-playbook deploy_jhub.yml`
+7. Run the playbook: 
+    - To run the entire playbook: `ansible-playbook deploy_jhub.yml`
+    - To run only the deploy_hub role: `ansible-playbook deploy_jhub.yml --tags deploy_hub`
+    - To run only the deploy_jhub role: `ansible-playbook deploy_jhub.yml --tags deploy_jhub`
 
 ## Customising your jupyterhub deployment
 These are settings/variables to chagne/add to customise your jupyterhub deployment, and are optional.
