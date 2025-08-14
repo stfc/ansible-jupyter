@@ -1,0 +1,18 @@
+# Addresses
+host_domain: "training.jupyter.stfc.ac.uk"
+ip_address: "130.246.213.50"
+
+# IRIS IAM
+# comment out if using usernames below
+iris_iam: false 
+
+client_id: #client ID
+client_secret: # client secret 
+
+admin_groups:
+  - # group1
+  - # group2
+
+allowed_groups:
+  - # group3
+  - # group4

@@ -1,0 +1,6 @@
+# Addresses
+host_domain: "training.jupyter.stfc.ac.uk"
+ip_address: "130.246.213.50"
+
+staging_cert: false
+

@@ -1,0 +1,9 @@
+# Admins and user accounts
+admin_names:
+  - # name1
+  - # name2
+user_groups:
+  # username: number of users to create
+  # foo: 5
+  # bar: 8
+
