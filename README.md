@@ -32,10 +32,9 @@ Provides a JupyterHub Service on an existing Openstack Cluster. This uses the he
 - Some metrics can't be selected by node name in Grafana dashboard as it requires a reverse DNS.
 
 ## Requirements
-The following assumes you have an Ubuntu 20.04 machine with `pip3`, `python3` and `python3-venv` already installed.
+The following assumes you have an Ubuntu 22.04 or 24.04 machine with `pip3`, `python3` already installed.
 
-
-- Ansible ([Installing Ansible — Ansible Documentation](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html)) - this is installed using `pip` in `py-requirements.txt`
+- Ansible ([Installing Ansible — Ansible Documentation](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html)) - on Ubuntu run `apt install ansible`.
 - Helm 3 ([Installing Helm](https://helm.sh/docs/intro/install/))
 - kubectl ([Install Tools | Kubernetes](https://kubernetes.io/docs/tasks/tools/))
 
@@ -55,13 +54,7 @@ sudo snap install helm --classic
 1. Deploy a capi cluster
 2. Ensure that you can access the cluster from the machine you are running this playbook from (`kubectl get no`)
 3. git clone this repo (`git clone https://github.com/stfc/ansible-jupyter`)
-4. Setup virtual environment:\
-  a. Create a virtual environment `venv` using `python3 -m venv venv`\
-  b. Upgrade `pip3` using `pip3 install pip --upgrade` to ensure you are using the latest version of pip.\
-  c. Activate `venv` using `. venv/bin/activate`\
-  d. Install the python dependencies: `pip3 install -r requirements.txt`\
-  e. If you get an error about the version of setuptools, upgrade it manually using `pip3 install setuptools --upgrade`\
-  f. Install Ansible requirements `ansible-galaxy collection install -r requirements.yml`\
+4. Install Ansible requirements `ansible-galaxy collection install -r requirements.yml`
 5. Uncomment the correct line for your environment in `inventory/hosts`
 6. Fill in the variables for your given environment in `group_vars/<environment>/all.yaml`
     - `iris_iam`: If true uses iris iam groups for admin and user accounts, if false uses jupyterhub deployed accounts instead
