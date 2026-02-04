@@ -55,15 +55,12 @@ sudo snap install helm --classic
 1. Deploy a capi cluster
 2. Ensure that you can access the cluster from the machine you are running this playbook from (`kubectl get no`)
 3. git clone this repo (`git clone https://github.com/stfc/ansible-jupyter`)
-4. Setup virtual environment:\
-  a. Create a virtual environment `venv` using `python3 -m venv venv`\
-  b. Upgrade `pip3` using `pip3 install pip --upgrade` to ensure you are using the latest version of pip.\
-  c. Activate `venv` using `. venv/bin/activate`\
-  d. Install the python dependencies: `pip3 install -r requirements.txt`\
-  e. If you get an error about the version of setuptools, upgrade it manually using `pip3 install setuptools --upgrade`\
-  f. Install Ansible requirements `ansible-galaxy collection install -r requirements.yml`\
-5. Uncomment the correct line for your environment in `inventory/hosts`
-6. Fill in the variables for your given environment in `group_vars/<environment>/all.yaml`
+4. Install requirements:\
+  a. Upgrade `pip3` using `pip3 install pip --upgrade` to ensure you are using the latest version of pip.\
+  b. Install the python dependencies: `pip3 install -r requirements.txt`\
+  c. If you get an error about the version of setuptools, upgrade it manually using `pip3 install setuptools --upgrade`\
+  d. Install Ansible requirements `ansible-galaxy collection install -r requirements.yml`
+5. Fill in the variables for your given environment in `group_vars/<environment>/all.yaml`
     - `iris_iam`: If true uses iris iam groups for admin and user accounts, if false uses jupyterhub deployed accounts instead
     - `client_id`: Client ID from iris iam
     - `client_secret`: Client secret from iris iam
@@ -91,7 +88,9 @@ sudo snap install helm --classic
     - `effect`: Whether to schedule on node if key taint not matched. Usually: `NoSchedule`
        </p>
     - `commands`: The commands (git clones) to run on the deployed instances/images
-7. Run the playbook: `ansible-playbook deploy_jhub.yml`
+6. Make sure kubeconfig is in ~/.kube
+7. Run the playbook and pass in name of the kubeconfig filename (without extnsion) and the deployment version: 
+`ansible-playbook deploy_jhub.yml -e "cluser_name=kubeconfig-name" -e "jhub=dev-or-prod-or-training"`
 
 ## Customising your jupyterhub deployment
 These are settings/variables to chagne/add to customise your jupyterhub deployment, and are optional.
