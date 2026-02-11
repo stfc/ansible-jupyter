@@ -6,7 +6,6 @@
     - group_vars/all.yaml
     - "group_vars/{{ jhub }}.yaml"
   roles:
-    - check_cluster
     - install_kubernetes
     - longhorn
     - nfs

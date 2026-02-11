@@ -90,7 +90,7 @@ sudo snap install helm --classic
     - `commands`: The commands (git clones) to run on the deployed instances/images
 6. Make sure kubeconfig is in ~/.kube
 7. Run the playbook and pass in name of the kubeconfig filename (without extnsion) and the deployment version: 
-`ansible-playbook deploy_jhub.yml -e "cluser_name=kubeconfig-name" -e "jhub=dev-or-prod-or-training"`
+`ansible-playbook deploy_jhub.yml -e "jhub=custom"`
 
 ## Customising your jupyterhub deployment
 These are settings/variables to chagne/add to customise your jupyterhub deployment, and are optional.
