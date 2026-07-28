@@ -12,5 +12,7 @@
     - deploy_longhorn
     - deploy_jupyterhub
     - restart_autohttps
+    - role: gpu_sharing
+      when: gpu_profiles is defined
     - role: change_owner_of_manila_pod
       when: manila.required == true

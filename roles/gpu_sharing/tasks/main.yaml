@@ -1,0 +1,58 @@
+- name: Create GPU config map
+  kubernetes.core.k8s:
+    kubeconfig: "{{ kubeconfig_path }}"
+    state: present
+    definition:
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: shared-gpu
+        namespace: gpu-operator
+      data:
+        users2: |-
+          version: v1
+          sharing:
+            timeSlicing:
+              resources:
+              - name: nvidia.com/gpu
+                replicas: 2
+        users3: |-
+          version: v1
+          sharing:
+            timeSlicing:
+              resources:
+              - name: nvidia.com/gpu
+                replicas: 3
+        users4: |-
+          version: v1
+          sharing:
+            timeSlicing:
+              resources:
+              - name: nvidia.com/gpu
+                replicas: 4
+
+- name: Patch config map
+  kubernetes.core.k8s:
+    kubeconfig: "{{ kubeconfig_path }}"
+    api_version: nvidia.com/v1
+    kind: ClusterPolicy
+    name: cluster-policy
+    namespace: gpu-operator
+    merge_type:
+      - merge
+    definition:
+      spec:
+        devicePlugin:
+          config:
+            name: shared-gpu
+
+- name: Apply replicas label to GPUs
+  ansible.builtin.command: >
+    kubectl label nodes
+    nvidia.com/device-plugin.config={{ gpu_sharing_gpu_profiles.profile }}
+    -l capi.stackhpc.com/node-group={{ gpu_sharing_gpu_profiles.node_group }}
+    --kubeconfig "{{ kubeconfig_path }}"
+  loop: "{{ gpu_profiles }}"
+  loop_control:
+    loop_var: gpu_sharing_gpu_profiles
+  changed_when: true
