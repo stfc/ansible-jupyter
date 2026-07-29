@@ -6,6 +6,7 @@ staging_cert: true
 
 admin_names:
   -
+  -
 # password must bet atleast 32 characters long to deploy correctly
 admin_password:
 number_of_users:
@@ -26,12 +27,16 @@ profiles:
       -
       -
 
-# Uncomment to set users per gpu
+# Set number of users per GPU
+# Available profiles: users2, users3, users4
+# users2 = 2 users per gpu, users3 = 3 users per gpu, etc.
+# Example
+#
 # gpu_profiles:
-#   - profile: users2
-#     node_group: gpu
-#   - profile: users3
-#     node_group: gpu2
+#   - node_group: gpu
+#     profile: users2
+#   - node_group: gpu2
+#     profile: users3
 
 manila:
   required: false
