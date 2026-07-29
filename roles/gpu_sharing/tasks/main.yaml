@@ -1,0 +1,72 @@
+---
+- name: Create GPU config map
+  kubernetes.core.k8s:
+    kubeconfig: "{{ kubeconfig_path }}"
+    state: present
+    definition:
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: shared-gpu
+        namespace: gpu-operator
+      data:
+        users2: |-
+          version: v1
+          sharing:
+            timeSlicing:
+              resources:
+              - name: nvidia.com/gpu
+                replicas: 2
+        users3: |-
+          version: v1
+          sharing:
+            timeSlicing:
+              resources:
+              - name: nvidia.com/gpu
+                replicas: 3
+        users4: |-
+          version: v1
+          sharing:
+            timeSlicing:
+              resources:
+              - name: nvidia.com/gpu
+                replicas: 4
+
+- name: Patch config map
+  kubernetes.core.k8s:
+    kubeconfig: "{{ kubeconfig_path }}"
+    api_version: nvidia.com/v1
+    kind: ClusterPolicy
+    name: cluster-policy
+    merge_type:
+      - merge
+    definition:
+      spec:
+        devicePlugin:
+          config:
+            name: shared-gpu
+
+- name: Find nodes matching node group label selector
+  kubernetes.core.k8s_info:
+    kubeconfig: "{{ kubeconfig_path }}"
+    kind: Node
+    label_selectors:
+      - "capi.stackhpc.com/node-group={{ gpu_sharing_gpu_profile.node_group }}"
+  loop: "{{ gpu_profiles }}"
+  loop_control:
+    loop_var: gpu_sharing_gpu_profile
+  register: node_group_results
+
+- name: Apply GPU sharing profile label to matched nodes
+  kubernetes.core.k8s:
+    kubeconfig: "{{ kubeconfig_path }}"
+    kind: Node
+    name: "{{ gpu_sharing_node_entry.1.metadata.name }}"
+    definition:
+      metadata:
+        labels:
+          nvidia.com/device-plugin.config: "{{ gpu_sharing_node_entry.0.gpu_sharing_gpu_profile.profile }}"
+  loop: "{{ node_group_results.results | subelements('resources', skip_missing=True) }}"
+  loop_control:
+    loop_var: gpu_sharing_node_entry
+    label: "{{ gpu_sharing_node_entry.1.metadata.name }} -> {{ gpu_sharing_node_entry.0.gpu_sharing_gpu_profile.profile }}"

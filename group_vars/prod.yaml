@@ -27,6 +27,13 @@ profiles:
       -
       -
 
+# Uncomment to set users per gpu
+# gpu_profiles:
+#   - profile: users2
+#     node_group: gpu
+#   - profile: users3
+#     node_group: gpu2
+
 manila:
   required: false
   mount_path: "/home/jovyan/manila"
