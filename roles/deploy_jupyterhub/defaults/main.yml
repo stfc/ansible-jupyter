@@ -137,6 +137,11 @@ jupyterhub_profile_list: >-
       'mem_limit': jupyterhub_profile_defaults.mem_limit,
       'mem_guarantee': profile.ram | default(jupyterhub_profile_defaults.mem_limit)
     } -%}
+    {%- if profile.cpu_required | default(false) | bool -%}
+      {%- set base_override = base_override | combine({
+        'node_selector': {'capi.stackhpc.com/node-group': 'cpu'}
+      })-%}
+    {%- endif -%}
     {%- if profile.gpu_required | default(false) | bool -%}
       {%- set base_override = base_override | combine({
         'tolerations': [{
