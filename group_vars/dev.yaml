@@ -1,8 +1,9 @@
 ---
-host_domain: "test.jupyter.stfc.ac.uk"
-ip_address: "130.246.213.116"
+host_domain: "jupyter.{{ cluster_name }}.dev-jupyter.stfc.ac.uk"
 longhorn_ip: "130.246.83.115"
 staging_cert: true
+
+use_traefik: true
 
 admin_names:
   -
