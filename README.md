@@ -60,29 +60,43 @@ sudo snap install helm --classic
 4. Install Ansible requirements `ansible-galaxy collection install -r requirements.yml`
 5. Update the dynamic inventory details in `openstack.yml`
 6. Fill in the variables for your given environment in `group_vars/<environment>.yaml`
-    - `iris_iam`: If true uses iris iam groups for admin and user accounts, if false uses jupyterhub deployed accounts instead
-    - `client_id`: Client ID from iris iam
-    - `client_secret`: Client secret from iris iam
-    - `admin_groups`: List of iris iam groups to use for admins
-    - `allowed_groups`: List of allowed iris iam groups to use for users
+      <br>
+    - `admin names`: List of admin names (that get prefixed with `admin-`)
+    - `admin_password`: Password for admin accounts
+    - `number of users`: The number of user accounts to create
+    - `username`: They base username for the users (gets suffixed with `-1`, `-2`, etc)
+    - `user_password`: Password for user accounts
       </p>
-    - `admin_names`: The admin usernames to be created (these will be prepended with `admin-`)
-    - `number_of_users`: The number of user accounts to be created
-    - `username`: Username style to use (these with have numbers added to the end)
+      <br>
+    - `profiles`: list of profiles/environments that get deployed to Jupyterhub
+    - `display_name`: The name of the user environment
+    - `description`: The description of the environment
+    - `default`: Specify which profile is the default
+    - `ram`: Minimum guaranteed ram for a user environment
+    - `image`: Address of the image to use for the user environment
+    - `node_groups`: Array of node_groups the profile can be deployed to (eg: `["ng1", "ng2"]`)
+    - `gpu_required`: If a gpu is required for the environment
+    - `gpu_display_drivers`: If gpu display drivers are required
+    - `commands`: A list of commands to run on the profile (eg `git clone <repo>`)
       </p>
-    - `display_name`: The name of the environment displayed to the user
-    - `description`: The description of the environment displayed to the user
-    - `default`: Whether the environment is the default environment or not
-    - `image`: The image to use for generating the environment
-    - `gpu_required`: If a GPU is required for this profile
-    - `commands`: List of commands (git clones) to run on the deployed instances/images
+      <br>
+    - `gpu_profiles`: Which gpu time slicing profiles to use
+    - `node_group`: Which node group to apply the profile to
+    - `profile`: Which profile to apply (currently availble: `users2`, `users3`, `users4`)
       </p>
-    - `iris_iam`: Detials for setting up iris-iam
-      - `required`: If iris-iam is required or not
-      - `client_id`: Client ID from iris iam
-      - `client_secret`: Client secret from iris iam
-      - `admin_groups`: List of iris iam groups to use for admins
-      - `allowed_groups`: List of allowed iris iam groups to use for users
+      <br>
+    - `manila`: Storage details for additional shared manila storage
+    - `required`: If manila share is required
+    - `mount_path`: Path that shared storage gets mounted for users
+    - `share_name`: what to call the manila share
+      </p>
+      <br>
+    - `iris_iam`: Details for supporting IRIS-IAM authentication
+    - `required`: If IRIS-IAM is required
+    - `client_id`: Client id from IRIS-IAM
+    - `client_secret`: Client secret from IRIS-IAM
+    - `admin_groups`: List of IRIS-IAM groups to use as admins
+    - `allowed_groups`: List of IRIS-IAM groups to use for users
 
 6. Make sure kubeconfig is in ~/.kube
 7. Run the playbook and pass in name of the kubeconfig filename (without extnsion) and the deployment version:

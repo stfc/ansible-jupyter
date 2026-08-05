@@ -20,6 +20,7 @@ profiles:
     default: true
     ram: "5G"
     image: jupyter/minimal-notebook
+    node_groups: []
     gpu_required: false
     gpu_display_drivers: false
     # Please remove '-'s if no commands required

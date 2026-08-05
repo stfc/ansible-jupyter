@@ -137,6 +137,17 @@ jupyterhub_profile_list: >-
       'mem_limit': jupyterhub_profile_defaults.mem_limit,
       'mem_guarantee': profile.ram | default(jupyterhub_profile_defaults.mem_limit)
     } -%}
+    {%- if ( profile.node_groups is defined and profile.node_groups | length > 0 ) | default(false) | bool -%}
+          {%- set base_override = base_override | combine({
+            'node_affinity_required': [{
+              'matchExpressions': [{
+                'key': 'capi.stackhpc.com/node-group',
+                'operator': 'In',
+                'values': profile.node_groups
+              }]
+            }]
+          })-%}
+      {%- endif -%}
     {%- if profile.gpu_required | default(false) | bool -%}
       {%- set base_override = base_override | combine({
         'tolerations': [{
