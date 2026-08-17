@@ -1,21 +1,21 @@
 ---
+# TODO: Remove when switched fully to Traefik
 contact_email: "SUPPORTANALYSIS@stfc.ac.uk"
 
 longhorn_version: "v1.11.2"
-longhorn_config_file: "/home/{{ ansible_user_id }}/{{ cluster_name }}/longhorn.yaml"
 longhorn_namespace: longhorn-system
 longhorn_deployed_name: longhorn
 longhorn_chart_ref: longhorn
-longhorn_repo_name: longhorn
 longhorn_repo_url: https://charts.longhorn.io
 
 # Helm chart version for Jhub (newer version may require newer kubernetes version >=1.17)
 jhub_version: "4.3.5"
-# Name of JupyterHub cluster used in load balancer names
-jhub_cluster_name: jupyterhub_cluster
+# TODO: Switch to 5.0.0 for httpRoute.parentRefs support once switching to ListenerSet
+# Or, we can create the httpRoute ourselves and stay on 4 while 5 is unstable
+# jhub_version: "5.0.0-0.dev.git.7429.ha20ad482"
+
 jhub_namespace: jupyterhub
 jhub_deployed_name: jupyterhub
-jhub_config_file: "/home/{{ ansible_user_id }}/{{ cluster_name }}/jupyterhub-config.yaml"
 jhub_repo_name: jupyterhub
 jhub_repo_url: https://jupyterhub.github.io/helm-chart/
 jhub_chart_ref: jupyterhub

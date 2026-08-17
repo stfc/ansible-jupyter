@@ -9,6 +9,34 @@
     msg: "Admin password must be at least 32 characters"
   when: admin_password | length < 32
 
+# TODO: Enable ListenerSet
+# - name: Deploy listenerset
+#   kubernetes.core.k8s:
+#     kubeconfig: "{{ kubeconfig_path }}"
+#     state: present
+#     resource_definition:
+#       apiVersion: gateway.networking.k8s.io/v1
+#       kind: ListenerSet
+#       metadata:
+#         name: jupyterhub
+#         namespace: jupyterhub
+#         annotations:
+#           cert-manager.io/cluster-issuer: letsencrypt-http01
+#           acme.cert-manager.io/http01-parentreffallback: "true"
+#       spec:
+#         parentRef:
+#           name: traefik-gateway
+#           namespace: traefik
+#         listeners:
+#           - name: websecure
+#             hostname: "{{ host_domain }}"
+#             port: 8443
+#             protocol: HTTPS
+#             tls:
+#               mode: Terminate
+#               certificateRefs:
+#                 - name: jupyterhub-tls
+
 - name: Install pre-set version of hub. This may take up to 25m to pull various images...
   kubernetes.core.helm:
     chart_ref: "{{ jhub_chart_ref }}"

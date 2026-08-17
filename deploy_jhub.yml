@@ -11,8 +11,9 @@
     - check_cluster
     - deploy_longhorn
     - deploy_jupyterhub
-    - restart_autohttps
     - role: gpu_sharing
       when: gpu_profiles is defined
+    - role: restart_autohttps
+      when: not use_traefik
     - role: change_owner_of_manila_pod
-      when: manila.required == true
+      when: manila.required

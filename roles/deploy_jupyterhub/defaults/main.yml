@@ -16,6 +16,39 @@ jupyterhub_proxy_config:
     service:
       loadBalancerIP: "{{ ip_address }}"
 
+jupyterhub_proxy_config_traefik:
+  proxy:
+    service:
+      type: ClusterIP
+    https:
+      enabled: false
+
+  # TODO: Switch to listenerset
+  # ingress:
+  #   enabled: false
+
+  # httpRoute:
+  #   enabled: true
+  #   hostnames:
+  #     - "{{ host_domain }}"
+  #   parentRefs:
+  #     - kind: ListenerSet
+  #       name: jupyterhub
+
+  ingress:
+    enabled: true
+    ingressClassName: traefik
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-http01
+    hosts:
+      - "{{ host_domain }}"
+    tls:
+      - secretName: jupyterhub-tls
+        hosts:
+          - "{{ host_domain }}"
+  httpRoute:
+    enabled: false
+
 jupyterhub_singleuser_config:
   singleuser:
     defaultUrl: /lab
@@ -54,6 +87,8 @@ jupyterhub_manila_config: >-
   {% endif %}
 jupyterhub_hub_config:
   hub:
+    networkPolicy:
+      interNamespaceAccessLabels: accept
     consecutiveFailureLimit: 0
     extraConfig:
       myConfig: |
@@ -202,7 +237,7 @@ jupyterhub_profile_list: >-
   {{ result }}
 jupyterhub_config_values: >-
   {{
-    jupyterhub_proxy_config
+    (jupyterhub_proxy_config_traefik if use_traefik else jupyterhub_proxy_config)
     | combine(jupyterhub_singleuser_config, recursive=True)
     | combine(jupyterhub_manila_config | from_yaml, recursive=True)
     | combine(jupyterhub_auth_config | from_yaml, recursive=True)
